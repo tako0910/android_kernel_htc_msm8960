@@ -1,4 +1,4 @@
-/* Copyright (c) 2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2012-2013, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -13,19 +13,19 @@
 
 #include <linux/init.h>
 #include <linux/ioport.h>
+#include <linux/gpio.h>
 #include <linux/platform_device.h>
 #include <linux/bootmem.h>
-#include <linux/ion.h>
+#include <linux/msm_ion.h>
 #include <asm/mach-types.h>
 #include <mach/msm_memtypes.h>
 #include <mach/board.h>
-#include <mach/gpio.h>
 #include <mach/gpiomux.h>
 #include <mach/ion.h>
 #include <mach/msm_bus_board.h>
-#include <mach/panel_id.h>
-#include <mach/debug_display.h>
+
 #include "devices.h"
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 #ifdef CONFIG_MACH_M7_WLJ
 #include "board-m7wlj.h"
 #else
@@ -37,13 +37,25 @@
 #include "../../../../drivers/video/msm/msm_fb.h"
 #include "../../../../drivers/video/msm/mipi_dsi.h"
 #include "../../../../drivers/video/msm/mdp4.h"
+=======
+#include "../board-m7.h"
+
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 #include <linux/i2c.h>
+#include <linux/mfd/pm8xxx/pm8921.h>
+#include <mach/debug_display.h>
 #include <mach/msm_xo.h>
+#include <mach/panel_id.h>
+#ifdef CONFIG_FB_MSM_HDMI_MHL
+#include <video/msm_hdmi_modes.h>
+#endif
 
 #ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
-#define MSM_FB_PRIM_BUF_SIZE (1920 * ALIGN(1080, 32) * 4 * 3)
+/* prim = 1920 x 1088 x 3(bpp) x 3(pages) */
+#define MSM_FB_PRIM_BUF_SIZE roundup(1920 * 1088 * 4 * 3, 0x10000)
 #else
-#define MSM_FB_PRIM_BUF_SIZE (1920 * ALIGN(1080, 32) * 4 * 2)
+/* prim = 1920 x 1088 x 3(bpp) x 2(pages) */
+#define MSM_FB_PRIM_BUF_SIZE roundup(1920 * 1088 * 4 * 2, 0x10000)
 #endif
 
 #define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE, 4096)
@@ -52,13 +64,14 @@
 #define MSM_FB_OVERLAY0_WRITEBACK_SIZE roundup((1920 * 1080 * 3 * 2), 4096)
 #else
 #define MSM_FB_OVERLAY0_WRITEBACK_SIZE (0)
-#endif  
+#endif  /* CONFIG_FB_MSM_OVERLAY0_WRITEBACK */
 
 #ifdef CONFIG_FB_MSM_OVERLAY1_WRITEBACK
 #define MSM_FB_OVERLAY1_WRITEBACK_SIZE roundup((1920 * 1088 * 3 * 2), 4096)
 #else
 #define MSM_FB_OVERLAY1_WRITEBACK_SIZE (0)
-#endif  
+#endif  /* CONFIG_FB_MSM_OVERLAY1_WRITEBACK */
+
 
 static struct resource msm_fb_resources[] = {
 	{
@@ -66,18 +79,12 @@ static struct resource msm_fb_resources[] = {
 	}
 };
 struct msm_xo_voter *wa_xo;
-static char ptype[60] = "PANEL type = ";
-const size_t ptype_len = ( 60 - sizeof("PANEL type = "));
 
-#define MIPI_NOVATEK_PANEL_NAME "mipi_cmd_novatek_qhd"
-#define MIPI_RENESAS_PANEL_NAME "mipi_video_renesas_fiwvga"
-#define MIPI_VIDEO_TOSHIBA_WSVGA_PANEL_NAME "mipi_video_toshiba_wsvga"
-#define MIPI_VIDEO_CHIMEI_WXGA_PANEL_NAME "mipi_video_chimei_wxga"
 #define HDMI_PANEL_NAME "hdmi_msm"
-#define TVOUT_PANEL_NAME "tvout_msm"
 
 static int m7wl_detect_panel(const char *name)
 {
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 #if 0
 	if (panel_type == PANEL_ID_DLX_SONY_RENESAS) {
 		if (!strncmp(name, MIPI_RENESAS_PANEL_NAME,
@@ -95,6 +102,8 @@ static int m7wl_detect_panel(const char *name)
 		}
 	}
 #endif
+=======
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 	if (!strncmp(name, HDMI_PANEL_NAME,
 		strnlen(HDMI_PANEL_NAME,
 			PANEL_NAME_MAX_LEN)))
@@ -130,7 +139,6 @@ void __init m7wl_allocate_fb_region(void)
 
 #define MDP_VSYNC_GPIO 0
 
-#ifdef CONFIG_MSM_BUS_SCALING
 static struct msm_bus_vectors mdp_init_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
@@ -150,7 +158,7 @@ static struct msm_bus_vectors mdp_ui_vectors[] = {
 };
 
 static struct msm_bus_vectors mdp_vga_vectors[] = {
-	
+	/* VGA and less video */
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
@@ -160,7 +168,7 @@ static struct msm_bus_vectors mdp_vga_vectors[] = {
 };
 
 static struct msm_bus_vectors mdp_720p_vectors[] = {
-	
+	/* 720p and less video */
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
@@ -170,7 +178,7 @@ static struct msm_bus_vectors mdp_720p_vectors[] = {
 };
 
 static struct msm_bus_vectors mdp_1080p_vectors[] = {
-	
+	/* 1080p and less video */
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
@@ -212,46 +220,71 @@ static struct msm_bus_scale_pdata mdp_bus_scale_pdata = {
 	.name = "mdp",
 };
 
-static struct msm_bus_vectors dtv_bus_init_vectors[] = {
+static struct msm_panel_common_pdata mdp_pdata = {
+	.gpio = MDP_VSYNC_GPIO,
+	.mdp_max_clk = 266667000,
+	.mdp_max_bw = 4290000000u,
+	.mdp_bw_ab_factor = 115,
+	.mdp_bw_ib_factor = 150,
+	.mdp_bus_scale_table = &mdp_bus_scale_pdata,
+	.mdp_rev = MDP_REV_44,
+#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
+	.mem_hid = BIT(ION_CP_MM_HEAP_ID),
+#else
+	.mem_hid = MEMTYPE_EBI1,
+#endif
+	.mdp_iommu_split_domain = 1,
+};
+
+void __init m7_mdp_writeback(struct memtype_reserve* reserve_table)
+{
+	mdp_pdata.ov0_wb_size = MSM_FB_OVERLAY0_WRITEBACK_SIZE;
+	mdp_pdata.ov1_wb_size = MSM_FB_OVERLAY1_WRITEBACK_SIZE;
+#if defined(CONFIG_ANDROID_PMEM) && !defined(CONFIG_MSM_MULTIMEDIA_USE_ION)
+	reserve_table[mdp_pdata.mem_hid].size +=
+		mdp_pdata.ov0_wb_size;
+	reserve_table[mdp_pdata.mem_hid].size +=
+		mdp_pdata.ov1_wb_size;
+
+	pr_info("mem_map: mdp reserved with size 0x%lx in pool\n",
+			mdp_pdata.ov0_wb_size + mdp_pdata.ov1_wb_size);
+#endif
+}
+
+#ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
+static struct resource hdmi_msm_resources[] = {
 	{
-		.src = MSM_BUS_MASTER_MDP_PORT0,
-		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 0,
-		.ib = 0,
+		.name  = "hdmi_msm_qfprom_addr",
+		.start = 0x00700000,
+		.end   = 0x007060FF,
+		.flags = IORESOURCE_MEM,
+	},
+	{
+		.name  = "hdmi_msm_hdmi_addr",
+		.start = 0x04A00000,
+		.end   = 0x04A00FFF,
+		.flags = IORESOURCE_MEM,
+	},
+	{
+		.name  = "hdmi_msm_irq",
+		.start = HDMI_IRQ,
+		.end   = HDMI_IRQ,
+		.flags = IORESOURCE_IRQ,
 	},
 };
 
-static struct msm_bus_vectors dtv_bus_def_vectors[] = {
-	{
-		.src = MSM_BUS_MASTER_MDP_PORT0,
-		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 566092800 * 2,
-		.ib = 707616000 * 2,
-	},
-};
-
-static struct msm_bus_paths dtv_bus_scale_usecases[] = {
-	{
-		ARRAY_SIZE(dtv_bus_init_vectors),
-		dtv_bus_init_vectors,
-	},
-	{
-		ARRAY_SIZE(dtv_bus_def_vectors),
-		dtv_bus_def_vectors,
-	},
-};
-
-static struct msm_bus_scale_pdata dtv_bus_scale_pdata = {
-	dtv_bus_scale_usecases,
-	ARRAY_SIZE(dtv_bus_scale_usecases),
-	.name = "dtv",
-};
-
-static struct lcdc_platform_data dtv_pdata = {
-	.bus_scale_table = &dtv_bus_scale_pdata,
+#ifdef CONFIG_FB_MSM_HDMI_MHL
+static mhl_driving_params m7_driving_params[] = {
+	{.format = HDMI_VFRMT_640x480p60_4_3, .reg_a3=0xEC, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_720x480p60_16_9, .reg_a3=0xEC, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_1280x720p60_16_9, .reg_a3=0xFB, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_720x576p50_16_9, .reg_a3=0xEC, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_1920x1080p24_16_9, .reg_a3=0xFB, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_1920x1080p30_16_9, .reg_a3=0xFB, .reg_a6=0x0C},
 };
 #endif
 
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 static int mdp_core_clk_rate_table[] = {
 	200000000,
 	200000000,
@@ -808,30 +841,58 @@ static struct msm_panel_common_pdata mdp_pdata = {
 	.mdp_gamma = m7wl_mdp_gamma,
 	.mdp_iommu_split_domain = 1,
 	.mdp_max_clk = 200000000,
+=======
+static int hdmi_core_power(int on, int show);
+static int hdmi_cec_power(int on);
+static int hdmi_gpio_config(int on);
+static int hdmi_panel_power(int on);
+
+static struct msm_hdmi_platform_data hdmi_msm_data = {
+	.irq = HDMI_IRQ,
+	.enable_5v = hdmi_enable_5v,
+	.core_power = hdmi_core_power,
+	.cec_power = hdmi_cec_power,
+	.panel_power = hdmi_panel_power,
+	.gpio_config = hdmi_gpio_config,
+#ifdef CONFIG_FB_MSM_HDMI_MHL
+	.driving_params = m7_driving_params,
+	.driving_params_count = ARRAY_SIZE(m7_driving_params),
+#endif
 };
 
-static char wfd_check_mdp_iommu_split_domain(void)
-{
-    return mdp_pdata.mdp_iommu_split_domain;
-}
+static struct platform_device hdmi_msm_device = {
+	.name = "hdmi_msm",
+	.id = 0,
+	.num_resources = ARRAY_SIZE(hdmi_msm_resources),
+	.resource = hdmi_msm_resources,
+	.dev.platform_data = &hdmi_msm_data,
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
+};
+#endif /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
 
 #ifdef CONFIG_FB_MSM_WRITEBACK_MSM_PANEL
+static char wfd_check_mdp_iommu_split_domain(void)
+{
+	return mdp_pdata.mdp_iommu_split_domain;
+}
+
 static struct msm_wfd_platform_data wfd_pdata = {
-    .wfd_check_mdp_iommu_split = wfd_check_mdp_iommu_split_domain,
+	.wfd_check_mdp_iommu_split = wfd_check_mdp_iommu_split_domain,
 };
 
 static struct platform_device wfd_panel_device = {
-    .name = "wfd_panel",
-    .id = 0,
-    .dev.platform_data = NULL,
+	.name = "wfd_panel",
+	.id = 0,
+	.dev.platform_data = NULL,
 };
 
 static struct platform_device wfd_device = {
-    .name          = "msm_wfd",
-    .id            = -1,
-    .dev.platform_data = &wfd_pdata,
+	.name          = "msm_wfd",
+	.id            = -1,
+	.dev.platform_data = &wfd_pdata,
 };
 #endif
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 void __init m7wl_mdp_writeback(struct memtype_reserve* reserve_table)
 {
 	mdp_pdata.ov0_wb_size = MSM_FB_OVERLAY0_WRITEBACK_SIZE;
@@ -844,12 +905,15 @@ void __init m7wl_mdp_writeback(struct memtype_reserve* reserve_table)
 #endif
 }
 static int first_init = 1;
+=======
+
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 uint32_t cfg_panel_te_active[] = {GPIO_CFG(LCD_TE, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA)};
 uint32_t cfg_panel_te_sleep[] = {GPIO_CFG(LCD_TE, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA)};
-
 static int mipi_dsi_panel_power(int on)
 {
 	static bool dsi_power_on = false;
+	static bool panel_first_init = true;
 	static struct regulator *reg_lvs5, *reg_l2;
 	static int gpio36, gpio37;
 	int rc;
@@ -882,13 +946,13 @@ static int mipi_dsi_panel_power(int on)
 			return -EINVAL;
 		}
 
-		gpio36 = PM8921_GPIO_PM_TO_SYS(V_LCM_N5V_EN); 
+		gpio36 = PM8921_GPIO_PM_TO_SYS(V_LCM_N5V_EN);
 		rc = gpio_request(gpio36, "lcd_5v-");
 		if (rc) {
 			pr_err("request lcd_5v- failed, rc=%d\n", rc);
 			return -ENODEV;
 		}
-		gpio37 = PM8921_GPIO_PM_TO_SYS(V_LCM_P5V_EN); 
+		gpio37 = PM8921_GPIO_PM_TO_SYS(V_LCM_P5V_EN);
 		rc = gpio_request(gpio37, "lcd_5v+");
 		if (rc) {
 			pr_err("request lcd_5v+ failed, rc=%d\n", rc);
@@ -908,7 +972,7 @@ static int mipi_dsi_panel_power(int on)
 	}
 
 	if (on) {
-		if (!first_init) {
+		if (!panel_first_init) {
 			rc = regulator_set_optimum_mode(reg_l2, 100000);
 			if (rc < 0) {
 				pr_err("set_optimum_mode l2 failed, rc=%d\n", rc);
@@ -926,18 +990,21 @@ static int mipi_dsi_panel_power(int on)
 			}
 			hr_msleep(1);
 			gpio_set_value_cansleep(gpio37, 1);
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 			hr_msleep(2);  
 			gpio_set_value_cansleep(gpio36, 1);
 			hr_msleep(7);  
+=======
+			hr_msleep(2);
+			gpio_set_value_cansleep(gpio36, 1);
+			hr_msleep(7);
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 			gpio_set_value(LCD_RST, 1);
 
-			
 			msm_xo_mode_vote(wa_xo, MSM_XO_MODE_ON);
 			hr_msleep(10);
-			
 			msm_xo_mode_vote(wa_xo, MSM_XO_MODE_OFF);
 		} else {
-			
 			rc = regulator_enable(reg_lvs5);
 			if (rc) {
 				pr_err("enable lvs5 failed, rc=%d\n", rc);
@@ -953,41 +1020,51 @@ static int mipi_dsi_panel_power(int on)
 				pr_err("enable l2 failed, rc=%d\n", rc);
 				return -ENODEV;
 			}
-			
+
 			msm_xo_mode_vote(wa_xo, MSM_XO_MODE_ON);
-			msleep(10);
+			hr_msleep(10);
 			msm_xo_mode_vote(wa_xo, MSM_XO_MODE_OFF);
+
+			panel_first_init = false;
 		}
-#if 1
 		rc = gpio_tlmm_config(cfg_panel_te_active[0], GPIO_CFG_ENABLE);
 		if (rc) {
 			pr_err("%s: gpio_tlmm_config(%#x)=%d\n", __func__,
 					cfg_panel_te_active[0], rc);
 		}
-#endif
 	} else {
-#if 1
 		rc = gpio_tlmm_config(cfg_panel_te_sleep[0], GPIO_CFG_ENABLE);
 		if (rc) {
 			pr_err("%s: gpio_tlmm_config(%#x)=%d\n", __func__,
 					cfg_panel_te_sleep[0], rc);
 		}
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 #endif
 #ifdef CONFIG_MACH_M7_WLJ
 		gpio_set_value_cansleep(bl_en, 0);
 #else
+=======
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 		gpio_tlmm_config(GPIO_CFG(BL_HW_EN, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
 		gpio_set_value(BL_HW_EN, 0);
 #endif
 
 		gpio_set_value(LCD_RST, 0);
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 		hr_msleep(3);  
+=======
+		hr_msleep(3);
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 
 		gpio_set_value_cansleep(gpio36, 0);
 		hr_msleep(2);
 		gpio_set_value_cansleep(gpio37, 0);
 
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 		hr_msleep(8);  
+=======
+		hr_msleep(8);
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 		rc = regulator_disable(reg_lvs5);
 		if (rc) {
 			pr_err("disable reg_lvs5 failed, rc=%d\n", rc);
@@ -1006,10 +1083,10 @@ static int mipi_dsi_panel_power(int on)
 }
 
 static struct mipi_dsi_platform_data mipi_dsi_pdata = {
-	
 	.dsi_power_save = mipi_dsi_panel_power,
 };
 
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 static struct mipi_dsi_panel_platform_data *mipi_m7wl_pdata;
 
 static struct dsi_buf m7wl_panel_tx_buf;
@@ -1548,132 +1625,77 @@ static struct dsi_cmd_desc m7_sharp_video_on_cmds[] = {
 	
 	{DTYPE_DCS_WRITE, 1, 0, 0, 1, sizeof(exit_sleep), exit_sleep},
 
+=======
+static struct platform_device mipi_dsi_m7_panel_device = {
+	.name   = "mipi_m7",
+	.id = 0,
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 };
 
-static struct dsi_cmd_desc sharp_video_on_cmds[] = {
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(interface_setting_0), interface_setting_0},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(nop), nop},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(nop), nop},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(Manufacture_Command_setting), Manufacture_Command_setting},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(Color_enhancement), Color_enhancement},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(Outline_Sharpening_Control), Outline_Sharpening_Control},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(BackLight_Control_6), BackLight_Control_6},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(write_control_display), write_control_display},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(CABC), CABC},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(TE_OUT), TE_OUT},
-	
-	{DTYPE_DCS_WRITE, 1, 0, 0, 0, sizeof(exit_sleep), exit_sleep},
-
+static struct msm_bus_vectors dtv_bus_init_vectors[] = {
+	{
+		.src = MSM_BUS_MASTER_MDP_PORT0,
+		.dst = MSM_BUS_SLAVE_EBI_CH0,
+		.ab = 0,
+		.ib = 0,
+	},
 };
 
-static struct dsi_cmd_desc sony_video_on_cmds[] = {
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(interface_setting_0), interface_setting_0},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(nop), nop},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(nop), nop},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(hsync_output), hsync_output},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(Color_enhancement), Color_enhancement},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(Outline_Sharpening_Control), Outline_Sharpening_Control},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(BackLight_Control_6), BackLight_Control_6},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(Manufacture_Command_setting), Manufacture_Command_setting},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(protect_on), protect_on},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(nop), nop},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(nop), nop},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(CABC), CABC},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(write_control_display), write_control_display},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(TE_OUT), TE_OUT},
-	{DTYPE_DCS_WRITE, 1, 0, 0, 0, sizeof(exit_sleep), exit_sleep},
+static struct msm_bus_vectors dtv_bus_def_vectors[] = {
+	{
+		.src = MSM_BUS_MASTER_MDP_PORT0,
+		.dst = MSM_BUS_SLAVE_EBI_CH0,
+		.ab = 566092800 * 2,
+		.ib = 707616000 * 2,
+	},
 };
 
-static struct dsi_cmd_desc sharp_display_off_cmds[] = {
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 20,
-		sizeof(display_off), display_off},
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 50,
-		sizeof(enter_sleep), enter_sleep}
+static struct msm_bus_paths dtv_bus_scale_usecases[] = {
+	{
+		ARRAY_SIZE(dtv_bus_init_vectors),
+		dtv_bus_init_vectors,
+	},
+	{
+		ARRAY_SIZE(dtv_bus_def_vectors),
+		dtv_bus_def_vectors,
+	},
 };
 
-static struct dsi_cmd_desc sony_display_off_cmds[] = {
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(display_off), display_off},
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 48, sizeof(enter_sleep), enter_sleep},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(interface_setting_0), interface_setting_0},
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(nop), nop},
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 0, sizeof(nop), nop},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(deep_standby_off), deep_standby_off},
+static struct msm_bus_scale_pdata dtv_bus_scale_pdata = {
+	dtv_bus_scale_usecases,
+	ARRAY_SIZE(dtv_bus_scale_usecases),
+	.name = "dtv",
 };
 
-static char unlock_command[2] = {0xB0, 0x04}; 
-static char lock_command[2] = {0xB0, 0x03}; 
-static struct dsi_cmd_desc jdi_renesas_cmd_on_cmds[] = {
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(unlock_command), unlock_command},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(common_setting), common_setting},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(cabc_still), cabc_still},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(cabc_movie), cabc_movie},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(SRE_Manual_0), SRE_Manual_0},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(m7_Color_enhancement), m7_Color_enhancement},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(Manufacture_Command_setting), Manufacture_Command_setting},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(lock_command), lock_command},
-	{DTYPE_DCS_WRITE, 1, 0, 0, 120, sizeof(exit_sleep), exit_sleep},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 1, sizeof(write_control_display), write_control_display},
-	{DTYPE_DCS_LWRITE, 1, 0, 0, 1, sizeof(Write_Content_Adaptive_Brightness_Control), Write_Content_Adaptive_Brightness_Control},
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 1, sizeof(enable_te), enable_te},
+static struct lcdc_platform_data dtv_pdata = {
+	.bus_scale_table = &dtv_bus_scale_pdata,
 };
 
-static struct dsi_cmd_desc jdi_display_off_cmds[] = {
-	{DTYPE_DCS_WRITE, 1, 0, 0, 1, sizeof(display_off), display_off},
-	{DTYPE_DCS_WRITE, 1, 0, 0, 48, sizeof(enter_sleep), enter_sleep},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(unlock_command), unlock_command},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(deep_standby_off), deep_standby_off}
-};
+#ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
+/* HDMI related regulator data */
+#define BOOST_5V	"ext_5v"
+#define REG_CORE_POWER	"8921_lvs7"
 
-static int resume_blk = 0;
-static struct i2c_client *blk_pwm_client;
-static struct dcs_cmd_req cmdreq;
-static int pwmic_ver;
-
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 static int m7wl_lcd_on(struct platform_device *pdev)
+=======
+static int hdmi_panel_power(int on)
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 {
-	struct msm_fb_data_type *mfd;
-	struct mipi_panel_info *mipi;
-
-	mfd = platform_get_drvdata(pdev);
-	if (!mfd)
-		return -ENODEV;
-	if (mfd->key != MFD_KEY)
-		return -EINVAL;
-
-	mipi  = &mfd->panel_info.mipi;
-	if (!first_init) {
-		if (mipi->mode == DSI_VIDEO_MODE) {
-			cmdreq.cmds = video_on_cmds;
-			cmdreq.cmds_cnt = video_on_cmds_count;
-		} else {
-			cmdreq.cmds = cmd_on_cmds;
-			cmdreq.cmds_cnt = cmd_on_cmds_count;
-		}
-		cmdreq.flags = CMD_REQ_COMMIT;
-		cmdreq.rlen = 0;
-		cmdreq.cb = NULL;
-
-		mipi_dsi_cmdlist_put(&cmdreq);
-	}
-	first_init = 0;
-
-	PR_DISP_INFO("%s, %s, PWM A%d\n", __func__, ptype, pwmic_ver);
 	return 0;
 }
 
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 static int m7wl_lcd_off(struct platform_device *pdev)
+=======
+int hdmi_enable_5v(int on)
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 {
-	struct msm_fb_data_type *mfd;
+	static struct regulator *reg_boost_5v = NULL;
+	static int prev_on = 0;
+	int rc;
 
-	mfd = platform_get_drvdata(pdev);
-
-	if (!mfd)
-		return -ENODEV;
-	if (mfd->key != MFD_KEY)
-		return -EINVAL;
-
-	resume_blk = 1;
-
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 	PR_DISP_INFO("%s\n", __func__);
 	return 0;
 }
@@ -1681,11 +1703,15 @@ static int __devinit m7wl_lcd_probe(struct platform_device *pdev)
 {
 	if (pdev->id == 0) {
 		mipi_m7wl_pdata = pdev->dev.platform_data;
+=======
+	if (on == prev_on)
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 		return 0;
-	}
 
-	msm_fb_add_device(pdev);
+	if (!reg_boost_5v)
+		_GET_REGULATOR(reg_boost_5v, BOOST_5V);
 
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 	PR_DISP_INFO("%s\n", __func__);
 	return 0;
 }
@@ -1911,22 +1937,30 @@ static void m7wl_set_backlight(struct msm_fb_data_type *mfd)
 #endif
 		resume_blk = 1;
 	}
+=======
+	if (on) {
+		rc = regulator_enable(reg_boost_5v);
+		if (rc) {
+			pr_err("'%s' regulator enable failed, rc=%d\n",
+				BOOST_5V, rc);
+			return rc;
+		}
+	} else {
+		rc = regulator_disable(reg_boost_5v);
+		if (rc)
+			pr_warning("'%s' regulator disable failed, rc=%d\n",
+				BOOST_5V, rc);
+	}
 
-	return;
+	pr_info("%s(%s): success\n", __func__, on?"on":"off");
+
+	prev_on = on;
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
+
+	return 0;
 }
-static char SAE_on[2] = {0xE9, 0x12};
-static char SAE_off[2] = {0xE9, 0x00};
-static struct dsi_cmd_desc samsung_color_enhance_on_cmds[] = {
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(samsung_password_l2), samsung_password_l2},
-	{DTYPE_GEN_WRITE1, 1, 0, 0, 0, sizeof(SAE_on),SAE_on},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(samsung_password_l2_close), samsung_password_l2_close},
-};
-static struct dsi_cmd_desc samsung_color_enhance_off_cmds[] = {
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(samsung_password_l2), samsung_password_l2},
-	{DTYPE_GEN_WRITE1, 1, 0, 0, 0, sizeof(SAE_off),SAE_off},
-	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(samsung_password_l2_close), samsung_password_l2_close},
-};
 
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 static char renesas_color_en_on[2]= {0xCA, 0x01};
 static char renesas_color_en_off[2]= {0xCA, 0x00};
 static struct dsi_cmd_desc sharp_renesas_color_enhance_on_cmds[] = {
@@ -2167,49 +2201,25 @@ static void m7wl_sre_ctrl(struct msm_fb_data_type *mfd, unsigned long level)
 			current_stage = 11;
 			PR_DISP_INFO("out of range of ADC, set it to 11 as default\n");
 		}
+=======
+static int hdmi_core_power(int on, int show)
+{
+	static struct regulator *reg;
+	static int prev_on;
+	int rc;
 
-		if ( prev_stage == current_stage)
-			return;
-		tmp_stage = prev_stage;
-		prev_stage = current_stage;
+	if (on == prev_on)
+		return 0;
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 
-		if (sre_ctrl_cmds == NULL)
-			return;
-
-		if (current_stage == 1) {
-			cmdreq.cmds = sre_ctrl_cmds[0];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 2) {
-			cmdreq.cmds = sre_ctrl_cmds[1];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 3) {
-			cmdreq.cmds = sre_ctrl_cmds[2];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 4) {
-			cmdreq.cmds = sre_ctrl_cmds[3];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 5) {
-			cmdreq.cmds = sre_ctrl_cmds[4];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 6) {
-			cmdreq.cmds = sre_ctrl_cmds[5];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 7) {
-			cmdreq.cmds = sre_ctrl_cmds[6];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 8) {
-			cmdreq.cmds = sre_ctrl_cmds[7];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 9) {
-			cmdreq.cmds = sre_ctrl_cmds[8];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else if (current_stage == 10) {
-			cmdreq.cmds = sre_ctrl_cmds[9];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
-		} else {
-			cmdreq.cmds = sre_ctrl_cmds[0];
-			cmdreq.cmds_cnt = sre_ctrl_cmds_count;
+	if (!reg) {
+		reg = regulator_get(&hdmi_msm_device.dev, REG_CORE_POWER);
+		if (IS_ERR(reg)) {
+			pr_err("could not get %s, rc = %ld\n",
+				REG_CORE_POWER, PTR_ERR(reg));
+			return -ENODEV;
 		}
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 
 		cmdreq.flags = CMD_REQ_COMMIT;
 		cmdreq.rlen = 0;
@@ -2286,9 +2296,31 @@ void m7wl_set_cabc (struct msm_fb_data_type *mfd, int mode)
 
 	mipi_dsi_cmdlist_put(&cmdreq);
 	PR_DISP_INFO("set_cabc mode = %d\n", mode);
-}
-#endif
+=======
+	}
+	if (on) {
+		rc = regulator_enable(reg);
+		if (rc) {
+			pr_err("'%s' regulator enable failed, rc=%d\n",
+				REG_CORE_POWER, rc);
+			return rc;
+		}
 
+		pr_info("%s(on): success\n", __func__);
+	} else {
+		rc = regulator_disable(reg);
+		if (rc) {
+			pr_err("disable %s failed, rc=%d\n", REG_CORE_POWER, rc);
+			return -ENODEV;
+		}
+		pr_info("%s(off): success\n", __func__);
+	}
+	prev_on = on;
+	return rc;
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
+}
+
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 static struct platform_driver this_driver = {
 	.probe  = m7wl_lcd_probe,
 	.driver = {
@@ -2482,10 +2514,16 @@ static int __init mipi_cmd_jdi_renesas_init(void)
 	PR_DISP_INFO("%s\n", __func__);
 
 	return ret;
+=======
+static int hdmi_gpio_config(int on)
+{
+	return 0;
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 }
 
-static int __init mipi_cmd_sharp_init(void)
+static int hdmi_cec_power(int on)
 {
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 	int ret;
 
 	pinfo.xres = 1080;
@@ -2585,10 +2623,15 @@ static int __init mipi_cmd_sharp_init(void)
 	PR_DISP_INFO("%s\n", __func__);
 	return ret;
 
+=======
+	return 0;
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 }
+#endif /* CONFIG_FB_MSM_HDMI_MSM_PANEL */
 
-static int __init mipi_video_sharp_init(void)
+static void __init m7_set_display_params(char *prim_panel, char *ext_panel)
 {
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 	int ret;
 
 	pinfo.xres = 1080;
@@ -2660,30 +2703,16 @@ static int __init mipi_video_sharp_init(void)
 		video_on_cmds = m7_sharp_video_on_cmds;
 		video_on_cmds_count = ARRAY_SIZE(m7_sharp_video_on_cmds);
 
+=======
+	if (strnlen(prim_panel, PANEL_NAME_MAX_LEN)) {
+		strlcpy(msm_fb_pdata.prim_panel_name, prim_panel,
+				PANEL_NAME_MAX_LEN);
+		pr_debug("msm_fb_pdata.prim_panel_name %s\n",
+				msm_fb_pdata.prim_panel_name);
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 	}
-	display_on_cmds = renesas_display_on_cmds;
-	display_on_cmds_count = ARRAY_SIZE(renesas_display_on_cmds);
-	display_off_cmds = sharp_display_off_cmds;
-	display_off_cmds_count = ARRAY_SIZE(sharp_display_off_cmds);
-	backlight_cmds = renesas_cmd_backlight_cmds;
-	backlight_cmds_count = ARRAY_SIZE(renesas_cmd_backlight_cmds);
-	dim_on_cmds = renesas_dim_on_cmds;
-	dim_on_cmds_count = ARRAY_SIZE(renesas_dim_on_cmds);
-	dim_off_cmds = renesas_dim_off_cmds;
-	dim_off_cmds_count = ARRAY_SIZE(renesas_dim_off_cmds);
-	color_en_on_cmds = sharp_renesas_color_enhance_on_cmds;
-	color_en_on_cmds_count = ARRAY_SIZE(sharp_renesas_color_enhance_on_cmds);
-	color_en_off_cmds = sharp_renesas_color_enhance_off_cmds;
-	color_en_off_cmds_count = ARRAY_SIZE(sharp_renesas_color_enhance_off_cmds);
 
-	pwm_min = 13;
-	pwm_default = 82;
-	pwm_max = 255;
-
-	PR_DISP_INFO("%s\n", __func__);
-	return ret;
-}
-
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 static int __init mipi_video_sony_init(void)
 {
 	int ret;
@@ -2944,25 +2973,35 @@ static struct i2c_driver pwm_i2c_driver = {
 static void __exit pwm_i2c_remove(void)
 {
 	i2c_del_driver(&pwm_i2c_driver);
+=======
+	if (strnlen(ext_panel, PANEL_NAME_MAX_LEN)) {
+		strlcpy(msm_fb_pdata.ext_panel_name, ext_panel,
+				PANEL_NAME_MAX_LEN);
+		pr_debug("msm_fb_pdata.ext_panel_name %s\n",
+				msm_fb_pdata.ext_panel_name);
+	}
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 }
 
 void __init m7wl_init_fb(void)
 {
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 	platform_device_register(&msm_fb_device);
+=======
+	wa_xo = msm_xo_get(MSM_XO_TCXO_D0, "mipi");
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
 
 	if (panel_type == PANEL_ID_M7_SHARP_RENESAS)
 		mdp_pdata.cont_splash_enabled = 0x1;
 
-	if(panel_type != PANEL_ID_NONE) {
-		msm_fb_register_device("mdp", &mdp_pdata);
-		msm_fb_register_device("mipi_dsi", &mipi_dsi_pdata);
-		wa_xo = msm_xo_get(MSM_XO_TCXO_D0, "mipi");
-	}
-	msm_fb_register_device("dtv", &dtv_pdata);
+	m7_set_display_params("mipi_m7", "hdmi_msm");
+	platform_device_register(&msm_fb_device);
+
 #ifdef CONFIG_FB_MSM_WRITEBACK_MSM_PANEL
 	platform_device_register(&wfd_panel_device);
 	platform_device_register(&wfd_device);
 #endif
+<<<<<<< HEAD:arch/arm/mach-msm/htc/m7wlj/display/board-m7wlj-panel.c
 }
 
 static int __init m7wl_panel_init(void)
@@ -3022,3 +3061,14 @@ static int __init m7wl_panel_init(void)
 	return platform_driver_register(&this_driver);
 }
 device_initcall_sync(m7wl_panel_init);
+=======
+
+	platform_device_register(&mipi_dsi_m7_panel_device);
+	msm_fb_register_device("mdp", &mdp_pdata);
+	msm_fb_register_device("mipi_dsi", &mipi_dsi_pdata);
+#ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
+	platform_device_register(&hdmi_msm_device);
+#endif
+	msm_fb_register_device("dtv", &dtv_pdata);
+}
+>>>>>>> e591a58... msm: HTC: m7: update board display files:arch/arm/mach-msm/htc/m7/display/board-m7-panel.c
