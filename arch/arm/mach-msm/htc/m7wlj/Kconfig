@@ -3,9 +3,9 @@ config BOARD_HEADER_FILE
 	default ""
 
 config MACH_M7_WLJ
-        depends on ARCH_APQ8064
+#       depends on ARCH_APQ8064
         bool "HTC J One"
-        select FB_MSM_MIPI_DSI
+        select MACH_HTC
         help
           Support for the HTC APQ8064 M7_WLJ.
 

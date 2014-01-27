@@ -62,7 +62,11 @@ snd-soc-qdsp6-objs += msm-pcm-lpa.o msm-pcm-afe.o
 obj-$(CONFIG_SND_SOC_QDSP6) += snd-soc-qdsp6.o
 
 ifneq ($(CONFIG_MACH_HTC),y)
+ifdef CONFIG_MACH_M7_WLJ
+snd-soc-msm8960-objs := msm8960.o apq8064_M7.o msm8930.o mpq8064.o apq8064-i2s.o
+else
 snd-soc-msm8960-objs := msm8960.o apq8064.o msm8930.o mpq8064.o apq8064-i2s.o
+endif
 obj-$(CONFIG_SND_SOC_MSM8960) += snd-soc-msm8960.o
 endif
 
