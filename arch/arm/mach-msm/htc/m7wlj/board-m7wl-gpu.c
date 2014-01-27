@@ -20,7 +20,7 @@
 #include <mach/socinfo.h>
 
 #include "devices.h"
-#include "board-m7.h"
+#include "board-m7wl.h"
 
 #ifdef CONFIG_MSM_DCVS
 static struct msm_dcvs_freq_entry grp3d_freq[] = {
@@ -187,7 +187,7 @@ static struct resource kgsl_3d0_resources[] = {
 	},
 	{
 		.name = KGSL_3D0_SHADER_MEMORY,
-		.start = 0x04310000, /* Shader Mem Address */
+		.start = 0x04310000, /* Shader Mem address */
 		.end = 0x0431ffff,
 		.flags = IORESOURCE_MEM,
 	},
@@ -277,7 +277,7 @@ struct platform_device device_kgsl_3d0 = {
 	},
 };
 
-void __init m7_init_gpu(void)
+void __init m7wl_init_gpu(void)
 {
 	unsigned int version = socinfo_get_version();
 

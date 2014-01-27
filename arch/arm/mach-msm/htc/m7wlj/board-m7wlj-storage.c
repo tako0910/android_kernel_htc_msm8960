@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -15,7 +15,6 @@
 #include <linux/io.h>
 #include <linux/ioport.h>
 #include <linux/platform_device.h>
-#include <linux/gpio.h>
 #include <linux/bootmem.h>
 #include <linux/export.h>
 #include <asm/mach-types.h>
@@ -23,15 +22,15 @@
 #include <mach/msm_bus_board.h>
 #include <mach/msm_iomap.h>
 #include <mach/board.h>
+#include <mach/gpio.h>
 #include <mach/gpiomux.h>
+
 #include "devices.h"
-#include "board-m7.h"
+#include "board-m7wlj.h"
 #include "board-storage-common-a.h"
-#include "../board-storage-common-htc.h"
-#include <mach/htc_4335_wl_reg.h>
+#include "Board-storage-common-htc.h"
+#include <mach/htc_4335_wl_reg.h>   
 
-
-/* APQ8064 has 4 SDCC controllers */
 enum sdcc_controllers {
 	SDCC1,
 	SDCC2,
@@ -40,9 +39,8 @@ enum sdcc_controllers {
 	MAX_SDCC_CONTROLLER
 };
 
-/* All SDCC controllers require VDD/VCC voltage */
 static struct msm_mmc_reg_data mmc_vdd_reg_data[MAX_SDCC_CONTROLLER] = {
-	/* SDCC1 : eMMC card connected */
+	
 	[SDCC1] = {
 		.name = "sdc_vdd",
 		.high_vol_level = 2950000,
@@ -50,18 +48,23 @@ static struct msm_mmc_reg_data mmc_vdd_reg_data[MAX_SDCC_CONTROLLER] = {
 		.always_on = 1,
 		.lpm_sup = 1,
 		.lpm_uA = 9000,
-		.hpm_uA = 200000, /* 200mA */
+		.hpm_uA = 200000, 
 	},
-	/* SDCC3 : External card slot connected */
 	[SDCC3] = {
 		.name = "sdc_vdd",
 		.high_vol_level = 2950000,
 		.low_vol_level = 2950000,
-		.hpm_uA = 600000, /* 600mA */
+		.hpm_uA = 600000, 
+	},
+	
+	[SDCC4] = {
+		.name = "sdc_vdd",
+		.high_vol_level = 2950000,
+		.low_vol_level = 2950000,
+		.hpm_uA = 800000, 
 	}
 };
 
-/* SDCC controllers may require voting for VDD IO voltage */
 static struct msm_mmc_reg_data mmc_vdd_io_reg_data[MAX_SDCC_CONTROLLER] = {
 	
 	[SDCC1] = {
@@ -69,40 +72,46 @@ static struct msm_mmc_reg_data mmc_vdd_io_reg_data[MAX_SDCC_CONTROLLER] = {
 		.always_on = 1,
 		.high_vol_level = 1800000,
 		.low_vol_level = 1800000,
-		.hpm_uA = 200000, /* 200mA */
+		.hpm_uA = 200000, 
 	},
-	/* SDCC3 : External card slot connected */
 	[SDCC3] = {
 		.name = "sdc_vdd_io",
 		.high_vol_level = 2950000,
 		.low_vol_level = 1850000,
 		.always_on = 1,
 		.lpm_sup = 1,
-		/* Max. Active current required is 16 mA */
+		
 		.hpm_uA = 16000,
-		/*
-		 * Sleep current required is ~300 uA. But min. vote can be
-		 * in terms of mA (min. 1 mA). So let's vote for 2 mA
-		 * during sleep.
-		 */
 		.lpm_uA = 2000,
+	},
+	
+	[SDCC4] = {
+	       .name = "sdc_vdd_io",
+	       .high_vol_level = 1800000,
+	       .low_vol_level = 1800000,
+	       .always_on = 1,
+	       
+	       .hpm_uA = 16000,
 	}
 };
 
 static struct msm_mmc_slot_reg_data mmc_slot_vreg_data[MAX_SDCC_CONTROLLER] = {
-	/* SDCC1 : eMMC card connected */
+	
 	[SDCC1] = {
 		.vdd_data = &mmc_vdd_reg_data[SDCC1],
 		.vdd_io_data = &mmc_vdd_io_reg_data[SDCC1],
 	},
-	/* SDCC3 : External card slot connected */
 	[SDCC3] = {
 		.vdd_data = &mmc_vdd_reg_data[SDCC3],
 		.vdd_io_data = &mmc_vdd_io_reg_data[SDCC3],
+	},
+	
+	[SDCC4] = {
+		.vdd_data = &mmc_vdd_reg_data[SDCC4],
+		.vdd_io_data = &mmc_vdd_io_reg_data[SDCC4],
 	}
 };
 
-/* SDC1 pad data */
 static struct msm_mmc_pad_drv sdc1_pad_drv_on_cfg[] = {
 	{TLMM_HDRV_SDC1_CLK, GPIO_CFG_4MA},
 	{TLMM_HDRV_SDC1_CMD, GPIO_CFG_6MA},
@@ -127,7 +136,6 @@ static struct msm_mmc_pad_pull sdc1_pad_pull_off_cfg[] = {
 	{TLMM_PULL_SDC1_DATA, GPIO_CFG_PULL_UP}
 };
 
-/* SDC3 pad data */
 static struct msm_mmc_pad_drv sdc3_pad_drv_on_cfg[] = {
 	{TLMM_HDRV_SDC3_CLK, GPIO_CFG_8MA},
 	{TLMM_HDRV_SDC3_CMD, GPIO_CFG_8MA},
@@ -198,6 +206,66 @@ static struct msm_mmc_pin_data mmc_slot_pin_data[MAX_SDCC_CONTROLLER] = {
 	},
 };
 
+uint32_t sdc4_gpio_on[] = {
+	GPIO_CFG(63, 2, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_6MA),
+								
+	GPIO_CFG(64, 2, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_6MA),
+								
+	GPIO_CFG(65, 2, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_6MA),
+								
+	GPIO_CFG(66, 2, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_6MA),
+								
+	GPIO_CFG(67, 2, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_6MA),
+								
+	GPIO_CFG(68, 2, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_6MA),
+								
+};
+uint32_t sdc4_gpio_off[] = {
+	GPIO_CFG(63, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
+								
+	GPIO_CFG(64, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
+								
+	GPIO_CFG(65, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
+								
+	GPIO_CFG(66, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
+								
+	GPIO_CFG(67, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_UP, GPIO_CFG_2MA),
+								
+	GPIO_CFG(68, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
+								
+};
+
+static int config_msmgpio_table(uint32_t *table, int len)
+{
+	int n, rc;
+	for (n = 0; n < len; n++) {
+		rc = gpio_tlmm_config(table[n], GPIO_CFG_ENABLE);
+		if (rc) {
+			pr_err("mmc2 %s: gpio_tlmm_config(%#x)=%d\n", __func__, table[n], rc);
+			break;
+		}
+	}
+	return rc;
+}
+
+static unsigned int gpio_enabled_status = false;
+static int msm_sdcc_setup_gpio(bool enable)
+{
+	int rc;
+	if(!(enable^gpio_enabled_status))
+		return 0;
+
+	if(enable)
+		rc = config_msmgpio_table(sdc4_gpio_on,
+				  ARRAY_SIZE(sdc4_gpio_on));
+	else
+		rc = config_msmgpio_table(sdc4_gpio_off,
+				  ARRAY_SIZE(sdc4_gpio_off));
+
+	gpio_enabled_status = enable;
+	return rc;
+}
+
 #define MSM_MPM_PIN_SDC1_DAT1	17
 #define MSM_MPM_PIN_SDC3_DAT1	21
 
@@ -206,6 +274,7 @@ static unsigned int sdc1_sup_clk_rates[] = {
 	400000, 24000000, 48000000, 96000000
 };
 
+static unsigned int dlxj_sdc1_slot_type = MMC_TYPE_MMC;
 static struct mmc_platform_data sdc1_data = {
 	.ocr_mask       = MMC_VDD_27_28 | MMC_VDD_28_29,
 #ifdef CONFIG_MMC_MSM_SDC1_8_BIT_SUPPORT
@@ -215,17 +284,47 @@ static struct mmc_platform_data sdc1_data = {
 #endif
 	.sup_clk_table	= sdc1_sup_clk_rates,
 	.sup_clk_cnt	= ARRAY_SIZE(sdc1_sup_clk_rates),
+	.slot_type      = &dlxj_sdc1_slot_type,
 	.pin_data	= &mmc_slot_pin_data[SDCC1],
 	.vreg_data	= &mmc_slot_vreg_data[SDCC1],
-	.nonremovable	= 1,
-	.uhs_caps	= MMC_CAP_1_8V_DDR | MMC_CAP_UHS_DDR50,
+	.nonremovable   = 1,
+	.hc_erase_group_def	=1,
+	.uhs_caps   = MMC_CAP_1_8V_DDR | MMC_CAP_UHS_DDR50,
 	.mpm_sdiowakeup_int = MSM_MPM_PIN_SDC1_DAT1,
 	.msm_bus_voting_data = &sps_to_ddr_bus_voting_data,
+	.bkops_support = 1,
+	.prealloc_size = 6 * 1024 * 1024,
 };
-static struct mmc_platform_data *m7_sdc1_pdata = &sdc1_data;
+static struct mmc_platform_data *m7wl_sdc1_pdata = &sdc1_data;
 #else
-static struct mmc_platform_data *m7_sdc1_pdata;
+static struct mmc_platform_data *m7wl_sdc1_pdata;
 #endif
+
+static unsigned int sdc4_sup_clk_rates[] = {
+	400000, 24000000, 48000000, 96000000, 192000000
+};
+
+static unsigned int sdc4_slot_type = MMC_TYPE_SD;
+static struct mmc_platform_data m7wlj_sdc4_data = {
+	.ocr_mask       = MMC_VDD_27_28 | MMC_VDD_28_29,
+	.config_sdgpio  = msm_sdcc_setup_gpio,
+	.mmc_bus_width  = MMC_CAP_4_BIT_DATA,
+	.sup_clk_table	= sdc4_sup_clk_rates,
+	.sup_clk_cnt	= ARRAY_SIZE(sdc4_sup_clk_rates),
+	.vreg_data	= &mmc_slot_vreg_data[SDCC4],
+	.status_gpio	= PM8921_GPIO_PM_TO_SYS(25),
+	.status_irq	= PM8921_GPIO_IRQ(PM8921_IRQ_BASE, 25),
+	.irq_flags	= IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
+	.is_status_gpio_active_low = 1,
+	.slot_type      = &sdc4_slot_type,
+#if 0
+	.xpc_cap	= 1,
+	.uhs_caps	= (MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 |
+			MMC_CAP_UHS_SDR50 | MMC_CAP_UHS_DDR50 |
+			MMC_CAP_UHS_SDR104 | MMC_CAP_MAX_CURRENT_800),
+#endif
+	.msm_bus_voting_data = &sps_to_ddr_bus_voting_data,
+};
 
 #define PM8XXX_GPIO_INIT(_gpio, _dir, _buf, _val, _pull, _vin, _out_strength, \
 			_func, _inv, _disable) \
@@ -268,7 +367,13 @@ static struct pm8xxx_gpio_init wl_reg_on_gpio =
 					 PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
 					 PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
 					 PM_GPIO_FUNC_NORMAL, 0, 0);
-
+#if 0
+static struct pm8xxx_gpio_init wl_dev_wake_gpio =
+	PM8XXX_GPIO_INIT(WL_DEV_WAKE, PM_GPIO_DIR_OUT,
+					 PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
+					 PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
+					 PM_GPIO_FUNC_NORMAL, 0, 0);
+#endif
 static void config_gpio_table(struct pm8xxx_gpio_init *table, int len)
 {
 	int n, rc;
@@ -281,7 +386,7 @@ static void config_gpio_table(struct pm8xxx_gpio_init *table, int len)
 	}
 }
 
-static struct embedded_sdio_data m7_wifi_emb_data = {
+static struct embedded_sdio_data m7wl_wifi_emb_data = {
 	.cccr	= {
 		.sdio_vsn	= 2,
 		.multi_block	= 1,
@@ -296,7 +401,7 @@ static void (*wifi_status_cb)(int card_present, void *dev_id);
 static void *wifi_status_cb_devid;
 
 static int
-m7_wifi_status_register(void (*callback)(int card_present, void *dev_id),
+m7wl_wifi_status_register(void (*callback)(int card_present, void *dev_id),
 				void *dev_id)
 {
 	if (wifi_status_cb)
@@ -307,50 +412,45 @@ m7_wifi_status_register(void (*callback)(int card_present, void *dev_id),
 	return 0;
 }
 
-static int m7_wifi_cd;
+static int m7wl_wifi_cd;	
 
-static unsigned int m7_wifi_status(struct device *dev)
+static unsigned int m7wl_wifi_status(struct device *dev)
 {
-	return m7_wifi_cd;
+	return m7wl_wifi_cd;
 }
 
-static u32 m7_wifi_setup_power(struct device *dv, unsigned int vdd)
-{
-	/* Dummy function since pads are used for power */
-	return 0;
-}
-
+static unsigned int m7wl_wifislot_type = MMC_TYPE_SDIO_WIFI;
 static unsigned int wifi_sup_clk_rates[] = {
 	400000, 24000000, 48000000, 96000000, 192000000
 };
-
-static struct mmc_platform_data m7_wifi_data = {
-	.ocr_mask       = MMC_VDD_28_29,
-	.translate_vdd  = m7_wifi_setup_power,
+static struct mmc_platform_data m7wl_wifi_data = {
+	.ocr_mask               = MMC_VDD_28_29,
+	.status                 = m7wl_wifi_status,
+	.register_status_notify = m7wl_wifi_status_register,
+	.embedded_sdio          = &m7wl_wifi_emb_data,
 	.mmc_bus_width  = MMC_CAP_4_BIT_DATA,
-	.sup_clk_table	= wifi_sup_clk_rates,
-	.sup_clk_cnt	= ARRAY_SIZE(wifi_sup_clk_rates),
-	.nonremovable	= 1,
-	.uhs_caps	= (MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 |
-			MMC_CAP_UHS_SDR50 | MMC_CAP_UHS_DDR50 |
-			MMC_CAP_UHS_SDR104 | MMC_CAP_MAX_CURRENT_800),
+	.slot_type = &m7wl_wifislot_type,
+	.sup_clk_table = wifi_sup_clk_rates,
+	.sup_clk_cnt = ARRAY_SIZE(wifi_sup_clk_rates),
+	.uhs_caps = (MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 |
+	             MMC_CAP_UHS_SDR50 | MMC_CAP_UHS_DDR50 |
+	             MMC_CAP_UHS_SDR104 | MMC_CAP_MAX_CURRENT_800),
 	.msm_bus_voting_data = &wifi_sps_to_ddr_bus_voting_data,
-	.status		= m7_wifi_status,
-	.register_status_notify = m7_wifi_status_register,
-	.embedded_sdio	= &m7_wifi_emb_data,
+	.nonremovable   = 0,
 };
 
-int m7_wifi_set_carddetect(int val)
+
+int m7wl_wifi_set_carddetect(int val)
 {
 	printk(KERN_INFO "%s: %d\n", __func__, val);
-	m7_wifi_cd = val;
+	m7wl_wifi_cd = val;
 	if (wifi_status_cb)
 		wifi_status_cb(val, wifi_status_cb_devid);
 	else
 		printk(KERN_WARNING "%s: Nobody to notify\n", __func__);
 	return 0;
 }
-EXPORT_SYMBOL(m7_wifi_set_carddetect);
+EXPORT_SYMBOL(m7wl_wifi_set_carddetect);
 
 #define BIT_HDRIV_PULL_NO      0
 #define BIT_HDRIV_PULL_DOWN    1
@@ -388,41 +488,55 @@ int sdc_pad_gpio_config(unsigned int pad_addr, unsigned cmd_pull, unsigned data_
 #ifdef ENABLE_4335BT_WAR
 extern int bcm_bt_lock(int cookie);
 extern void bcm_bt_unlock(int cookie);
-#endif
+#endif 
 
-int m7_wifi_power(int on)
+int m7wl_wifi_power(int on)
 {
 	const unsigned SDC3_HDRV_PULL_CTL_ADDR = (unsigned) MSM_TLMM_BASE + 0x20A4;
 
 #ifdef ENABLE_4335BT_WAR
-	int lock_cookie_wifi = 'W' | 'i'<<8 | 'F'<<16 | 'i'<<24;
+	int lock_cookie_wifi = 'W' | 'i'<<8 | 'F'<<16 | 'i'<<24;	
 
 	printk("WiFi: trying to acquire BT lock\n");
 	if (bcm_bt_lock(lock_cookie_wifi) != 0)
 		printk("** WiFi: timeout in acquiring bt lock**\n");
 	else
 		printk("** WiFi: btlock acquired**\n");
-#endif
+#endif 
 	printk(KERN_INFO "%s: %d\n", __func__, on);
 
 	if (on) {
+#if 0
+		writel(0x1FDB, SDC3_HDRV_PULL_CTL_ADDR);
+#else
 		sdc_pad_gpio_config(SDC3_HDRV_PULL_CTL_ADDR,
 				BIT_HDRIV_PULL_UP, BIT_HDRIV_PULL_UP,
-				HDRIV_STR_12MA, HDRIV_STR_12MA, HDRIV_STR_12MA);
+				HDRIV_STR_14MA, HDRIV_STR_12MA, HDRIV_STR_12MA);
+#endif
 		config_gpio_table(wifi_on_gpio_table,
 				  ARRAY_SIZE(wifi_on_gpio_table));
 	} else {
+#if 0
+		writel(0x0BDB, SDC3_HDRV_PULL_CTL_ADDR);
+#else
 		sdc_pad_gpio_config(SDC3_HDRV_PULL_CTL_ADDR,
 				BIT_HDRIV_PULL_UP, BIT_HDRIV_PULL_UP,
 				HDRIV_STR_2MA, HDRIV_STR_2MA, HDRIV_STR_2MA);
+#endif
 		config_gpio_table(wifi_off_gpio_table,
 				  ARRAY_SIZE(wifi_off_gpio_table));
 	}
 
-	mdelay(1);
+	mdelay(1); 
+	
+	
+	htc_BCM4335_wl_reg_ctl((on)?BCM4335_WL_REG_ON:BCM4335_WL_REG_OFF, ID_WIFI); 
 
-	htc_BCM4335_wl_reg_ctl((on)?BCM4335_WL_REG_ON:BCM4335_WL_REG_OFF, ID_WIFI);
-
+	mdelay(1); 
+#if 0
+	wl_dev_wake_gpio.config.output_value = on? 1: 0;
+	pm8xxx_gpio_config(wl_dev_wake_gpio.gpio, &wl_dev_wake_gpio.config);
+#endif
 	mdelay(120);
 
 #ifdef ENABLE_4335BT_WAR
@@ -430,23 +544,66 @@ int m7_wifi_power(int on)
 #endif
 	return 0;
 }
-EXPORT_SYMBOL(m7_wifi_power);
+EXPORT_SYMBOL(m7wl_wifi_power);
 
-int m7_wifi_reset(int on)
+int m7wl_wifi_reset(int on)
 {
 	printk(KERN_INFO "%s: do nothing\n", __func__);
 	return 0;
 }
 
-void __init m7_init_mmc(void)
+#if 0
+static int reg_set_l7_optimum_mode(void)
+{
+	static struct regulator *reg_l7;
+	int rc;
+
+	reg_l7 = regulator_get(NULL, "8921_l7");
+	if (IS_ERR_OR_NULL(reg_l7)) {
+		pr_err("[WLAN] could not get 8921_l7, rc = %ld\n",
+				PTR_ERR(reg_l7));
+		return -ENODEV;
+	}
+
+	if (!regulator_is_enabled(reg_l7)) {
+		rc = regulator_enable(reg_l7);
+		if (rc < 0) {
+			pr_err("[WLAN] enable l7 failed, rc=%d\n", rc);
+			return -EINVAL;
+		}
+	}
+
+	rc = regulator_set_optimum_mode(reg_l7, 10000);
+	if (rc < 0) {
+		pr_err("[WLAN] set_optimum_mode l7 failed, rc=%d\n", rc);
+		return -EINVAL;
+	}
+
+	return 0;
+}
+#endif
+
+void __init m7wlj_init_mmc(void)
 {
 	wifi_status_cb = NULL;
 
-	printk(KERN_INFO "m7: %s\n", __func__);
+	printk(KERN_INFO "m7wlj: %s\n", __func__);
 
+	
 	wl_reg_on_gpio.config.output_value = 0;
 	pm8xxx_gpio_config(wl_reg_on_gpio.gpio, &wl_reg_on_gpio.config);
 
-	apq8064_add_sdcc(1, m7_sdc1_pdata);
-	apq8064_add_sdcc(3, &m7_wifi_data);
+#if 0
+	wl_dev_wake_gpio.config.output_value = 0;
+	pm8xxx_gpio_config(wl_dev_wake_gpio.gpio, &wl_dev_wake_gpio.config);
+#endif
+#if 0
+	
+    m7wl_wifi_data.swfi_latency = msm_rpm_get_swfi_latency();
+#endif
+
+	apq8064_add_sdcc(1, m7wl_sdc1_pdata);
+	apq8064_add_sdcc(3, &m7wl_wifi_data);
+	apq8064_add_sdcc(4, &m7wlj_sdc4_data);
+	
 }
