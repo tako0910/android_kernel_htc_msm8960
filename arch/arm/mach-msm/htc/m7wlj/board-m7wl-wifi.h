@@ -13,6 +13,6 @@
  */
 
 extern unsigned char *get_wifi_nvs_ram(void);
-extern int m7_wifi_power(int on);
-extern int m7_wifi_reset(int on);
-extern int m7_wifi_set_carddetect(int on);
+extern int m7wl_wifi_power(int on);
+extern int m7wl_wifi_reset(int on);
+extern int m7wl_wifi_set_carddetect(int on);
