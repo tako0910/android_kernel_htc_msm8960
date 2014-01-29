@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2012, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2011-2012, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -19,6 +19,8 @@
 #include <mach/msm_memtypes.h>
 #include <mach/irqs.h>
 #include <mach/rpm-regulator.h>
+#include <mach/msm_rtb.h>
+#include <mach/msm_cache_dump.h>
 
 #define EVM	0x99
 #define EVM1	99
@@ -28,11 +30,18 @@
 #define XD	3
 #define PVT	0x80
 
+#define _GET_REGULATOR(var, name) do {                                \
+        var = regulator_get(NULL, name);                        \
+        if (IS_ERR(var)) {                                        \
+                pr_err("'%s' regulator not found, rc=%ld\n",        \
+                        name, IS_ERR(var));                        \
+                var = NULL;                                        \
+                return -ENODEV;                                        \
+        }                                                        \
+} while (0)
+
 #define GPIO(x) (x)
 #define PMGPIO(x) (x)
-
-int __init m7wl_init_keypad(void);
-
 
 #define LCD_TE			GPIO(0)
 #define RAW_RST			GPIO(1)
@@ -180,10 +189,7 @@ int __init m7wl_init_keypad(void);
 #define PM8821_MPP_PM_TO_SYS(pm_mpp)	(pm_mpp - 1 + PM8821_MPP_BASE)
 #define PM8821_IRQ_BASE			(PM8921_IRQ_BASE + PM8921_NR_IRQS)
 
-#ifdef CONFIG_RESET_BY_CABLE_IN
-#define AC_WDT_EN		GPIO(3)
-#define AC_WDT_RST		GPIO(87)
-#endif
+#define TABLA_INTERRUPT_BASE (NR_MSM_IRQS + NR_GPIO_IRQS + NR_PM8921_IRQS)
 
 extern struct pm8xxx_regulator_platform_data
 	m7wl_pm8921_regulator_pdata[] __devinitdata;
@@ -211,17 +217,16 @@ int __init apq8064_add_sdcc(unsigned int controller,
 		struct mmc_platform_data *plat);
 
 void m7wl_init_mmc(void);
-int m7wl_wifi_init(void);
 void m7wl_init_gpiomux(void);
 void m7wl_init_pmic(void);
-void m7wl_init_pmic_register_cam_cb(void *cam_vcm_on_cb, void *cam_vcm_off_cb);
 
-#if 1	
-extern struct platform_device m7wl_msm_rawchip_device;
-#endif
 void m7wl_init_cam(void);
 
+int m7wl_init_keypad(void);
+int m7wl_wifi_init(void);
+
 #define APQ_8064_GSBI1_QUP_I2C_BUS_ID 0
+#define APQ_8064_GSBI2_QUP_I2C_BUS_ID 2
 #define APQ_8064_GSBI3_QUP_I2C_BUS_ID 3
 #define APQ_8064_GSBI4_QUP_I2C_BUS_ID 4
 
@@ -231,10 +236,16 @@ void m7wl_mdp_writeback(struct memtype_reserve *reserve_table);
 
 void m7wl_init_gpu(void);
 void m7wl_pm8xxx_gpio_mpp_init(void);
-void m7wl_usb_uart_switch(int nvbus);
 
-#ifdef CONFIG_RESET_BY_CABLE_IN
-void reset_dflipflop(void);
+extern struct msm_rtb_platform_data apq8064_rtb_pdata;
+extern struct msm_cache_dump_platform_data apq8064_cache_dump_pdata;
+
+#ifdef CONFIG_RAWCHIPII
+extern struct platform_device m7wl_msm_rawchip_device;
+#endif
+#ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
+int hdmi_enable_5v(int on);
+extern void hdmi_hpd_feature(int enable);
 #endif
 
 #endif
