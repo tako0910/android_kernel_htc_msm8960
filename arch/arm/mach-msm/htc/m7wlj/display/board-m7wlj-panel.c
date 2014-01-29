@@ -144,8 +144,8 @@ static struct msm_bus_vectors mdp_ui_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 216000000 * 2,
-		.ib = 270000000 * 2,
+		.ab = 577474560 * 2,
+		.ib = 866211840 * 2,
 	},
 };
 
@@ -154,8 +154,8 @@ static struct msm_bus_vectors mdp_vga_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 216000000 * 2,
-		.ib = 270000000 * 2,
+		.ab = 605122560 * 2,
+		.ib = 756403200 * 2,
 	},
 };
 
@@ -164,8 +164,8 @@ static struct msm_bus_vectors mdp_720p_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 230400000 * 2,
-		.ib = 288000000 * 2,
+		.ab = 660418560 * 2,
+		.ib = 825523200 * 2,
 	},
 };
 
@@ -174,8 +174,8 @@ static struct msm_bus_vectors mdp_1080p_vectors[] = {
 	{
 		.src = MSM_BUS_MASTER_MDP_PORT0,
 		.dst = MSM_BUS_SLAVE_EBI_CH0,
-		.ab = 334080000 * 2,
-		.ib = 417600000 * 2,
+		.ab = 764098560 * 2,
+		.ib = 955123200 * 2,
 	},
 };
 
@@ -252,6 +252,12 @@ static struct lcdc_platform_data dtv_pdata = {
 };
 #endif
 
+static int mdp_core_clk_rate_table[] = {
+	200000000,
+	200000000,
+	200000000,
+	200000000,
+};
 struct mdp_reg *mdp_gamma = NULL;
 int mdp_gamma_count = 0;
 struct mdp_reg mdp_gamma_jdi[] = {
@@ -786,10 +792,9 @@ int m7wl_mdp_gamma(void)
 
 static struct msm_panel_common_pdata mdp_pdata = {
 	.gpio = MDP_VSYNC_GPIO,
-	.mdp_max_clk = 266667000,
-	.mdp_max_bw = 4290000000u,
-	.mdp_bw_ab_factor = 115,
-	.mdp_bw_ib_factor = 200,
+	.mdp_core_clk_rate = 200000000,
+	.mdp_core_clk_table = mdp_core_clk_rate_table,
+	.num_mdp_clk = ARRAY_SIZE(mdp_core_clk_rate_table),
 #ifdef CONFIG_MSM_BUS_SCALING
 	.mdp_bus_scale_table = &mdp_bus_scale_pdata,
 #endif
@@ -802,6 +807,7 @@ static struct msm_panel_common_pdata mdp_pdata = {
 	.cont_splash_enabled = 0x00,
 	.mdp_gamma = m7wl_mdp_gamma,
 	.mdp_iommu_split_domain = 1,
+	.mdp_max_clk = 200000000,
 };
 
 static char wfd_check_mdp_iommu_split_domain(void)
@@ -1006,11 +1012,8 @@ static struct mipi_dsi_platform_data mipi_dsi_pdata = {
 
 static struct mipi_dsi_panel_platform_data *mipi_m7wl_pdata;
 
-//static struct dsi_buf m7wl_panel_tx_buf;
-//static struct dsi_buf m7wl_panel_rx_buf;
-
-static struct dsi_buf m7_panel_tx_buf;
-static struct dsi_buf m7_panel_rx_buf;
+static struct dsi_buf m7wl_panel_tx_buf;
+static struct dsi_buf m7wl_panel_rx_buf;
 static struct dsi_cmd_desc *video_on_cmds = NULL;
 static struct dsi_cmd_desc *display_on_cmds = NULL;
 static struct dsi_cmd_desc *display_off_cmds = NULL;
@@ -1023,7 +1026,6 @@ static struct dsi_cmd_desc *color_en_off_cmds = NULL;
 static struct dsi_cmd_desc **sre_ctrl_cmds = NULL;
 static struct dsi_cmd_desc *set_cabc_UI_cmds = NULL;
 static struct dsi_cmd_desc *set_cabc_Video_cmds = NULL;
-static struct dsi_cmd_desc *set_cabc_Camera_cmds = NULL;
 static int backlight_cmds_count = 0;
 static int video_on_cmds_count = 0;
 static int display_on_cmds_count = 0;
@@ -1036,14 +1038,7 @@ static int color_en_off_cmds_count = 0;
 static int sre_ctrl_cmds_count = 0;
 static int set_cabc_UI_cmds_count = 0;
 static int set_cabc_Video_cmds_count = 0;
-static int set_cabc_Camera_cmds_count = 0;
 
-#ifdef CONFIG_FB_MSM_CABC_LEVEL_CONTROL
-static int cabc_mode = 0;
-static int cur_cabc_mode = 0;
-static struct mutex set_cabc_mutex;
-void m7wl_set_cabc (struct msm_fb_data_type *mfd, int mode);
-#endif
 static unsigned int pwm_min = 6;
 static unsigned int pwm_default = 81 ;
 static unsigned int pwm_max = 255;
@@ -1487,12 +1482,12 @@ static char Source_Timing_Setting[23]= {
 static char lock[] = {0xB0, 0x03};
 static char Write_Content_Adaptive_Brightness_Control[2] = {0x55, 0x42};
 static char common_setting[] = {
-       0xCE, 0x6C, 0x40, 0x43,
+       0xCE, 0x69, 0x40, 0x43,
        0x49, 0x55, 0x62, 0x71,
        0x82, 0x94, 0xA8, 0xB9,
        0xCB, 0xDB, 0xE9, 0xF5,
        0xFC, 0xFF, 0x04, 0xD3, 
-       0x00, 0x00, 0x54, 0x24};
+       0x06, 0x06, 0x54, 0x24};
 
 static char cabc_still[] = {0xB9, 0x03, 0x82, 0x3C, 0x10, 0x3C, 0x87};
 static char cabc_movie[] = {0xBA, 0x03, 0x78, 0x64, 0x10, 0x64, 0xB4};
@@ -1679,7 +1674,6 @@ static int m7wl_lcd_off(struct platform_device *pdev)
 
 	resume_blk = 1;
 
-
 	PR_DISP_INFO("%s\n", __func__);
 	return 0;
 }
@@ -1695,12 +1689,9 @@ static int __devinit m7wl_lcd_probe(struct platform_device *pdev)
 	PR_DISP_INFO("%s\n", __func__);
 	return 0;
 }
-static int m7wl_display_on(struct platform_device *pdev)
+static void m7wl_display_on(struct msm_fb_data_type *mfd)
 {
-	struct msm_fb_data_type *mfd;
-
-	mfd = platform_get_drvdata(pdev);
-
+	
 	if (panel_type == PANEL_ID_DLXJ_SHARP_RENESAS ||
 		panel_type == PANEL_ID_DLXJ_SONY_RENESAS ||
 		panel_type == PANEL_ID_M7_SHARP_RENESAS)
@@ -1709,36 +1700,25 @@ static int m7wl_display_on(struct platform_device *pdev)
 	cmdreq.cmds = display_on_cmds;
 	cmdreq.cmds_cnt = display_on_cmds_count;
 	cmdreq.flags = CMD_REQ_COMMIT;
-	if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-		cmdreq.flags |= CMD_CLK_CTRL;
 	cmdreq.rlen = 0;
 	cmdreq.cb = NULL;
 
 	mipi_dsi_cmdlist_put(&cmdreq);
 
 	PR_DISP_INFO("%s\n", __func__);
-	return 0;
 }
 
-static int m7wl_display_off(struct platform_device *pdev)
+static void m7wl_display_off(struct msm_fb_data_type *mfd)
 {
-	struct msm_fb_data_type *mfd;
-
-	mfd = platform_get_drvdata(pdev);
-
 	cmdreq.cmds = display_off_cmds;
 	cmdreq.cmds_cnt = display_off_cmds_count;
 	cmdreq.flags = CMD_REQ_COMMIT;
-	if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-		cmdreq.flags |= CMD_CLK_CTRL;
-
 	cmdreq.rlen = 0;
 	cmdreq.cb = NULL;
 
 	mipi_dsi_cmdlist_put(&cmdreq);
 
 	PR_DISP_INFO("%s\n", __func__);
-	return 0;
 }
 
 #ifdef CABC_DIMMING_SWITCH
@@ -1758,9 +1738,6 @@ static void m7wl_dim_on(struct msm_fb_data_type *mfd)
 	cmdreq.cmds_cnt = dim_on_cmds_count;
 
 	cmdreq.flags = CMD_REQ_COMMIT;
-	if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-		cmdreq.flags |= CMD_CLK_CTRL;
-
 	cmdreq.rlen = 0;
 	cmdreq.cb = NULL;
 	mipi_dsi_cmdlist_put(&cmdreq);
@@ -1797,7 +1774,8 @@ static unsigned char m7wl_shrink_pwm(int val)
 	} else if (val > BRI_SETTING_MAX)
 		shrink_br = pwm_max;
 
-	pwm_value = shrink_br; 
+	if(pwmic_ver < 2)
+		pwm_value = shrink_br;
 
 	PR_DISP_INFO("brightness orig=%d, transformed=%d\n", val, shrink_br);
 
@@ -1833,6 +1811,10 @@ static void m7wl_set_backlight(struct msm_fb_data_type *mfd)
 	static int bl_en = PM8921_GPIO_PM_TO_SYS(BL_HW_EN);
 #endif
 	int rc;
+
+	if (mdp4_overlay_dsi_state_get() <= ST_DSI_SUSPEND) {
+		return;
+	}
 
 	if ((panel_type == PANEL_ID_M7_JDI_SAMSUNG) ||
 		(panel_type == PANEL_ID_M7_JDI_SAMSUNG_C2) ||
@@ -1904,34 +1886,22 @@ static void m7wl_set_backlight(struct msm_fb_data_type *mfd)
                 atomic_set(&lcd_backlight_off, 1);
 		cmdreq.cmds = dim_off_cmds;
 		cmdreq.cmds_cnt = dim_off_cmds_count;
-		cmdreq.flags = CMD_REQ_COMMIT;
-		if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-			cmdreq.flags |= CMD_CLK_CTRL;
+				cmdreq.flags = CMD_REQ_COMMIT;
+				cmdreq.rlen = 0;
+				cmdreq.cb = NULL;
 
-		cmdreq.rlen = 0;
-		cmdreq.cb = NULL;
-
-		mipi_dsi_cmdlist_put(&cmdreq);
+				mipi_dsi_cmdlist_put(&cmdreq);
         } else
                 atomic_set(&lcd_backlight_off, 0);
 #endif
 	cmdreq.cmds = backlight_cmds;
 	cmdreq.cmds_cnt = backlight_cmds_count;
 	cmdreq.flags = CMD_REQ_COMMIT;
-	if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-		cmdreq.flags |= CMD_CLK_CTRL;
-
 	cmdreq.rlen = 0;
 	cmdreq.cb = NULL;
 
 	mipi_dsi_cmdlist_put(&cmdreq);
 
-#ifdef CONFIG_FB_MSM_CABC_LEVEL_CONTROL
-	
-	if (cabc_mode == 3) {
-		m7wl_set_cabc(mfd, cabc_mode);
-	}
-#endif
 	if ((mfd->bl_level) == 0) {
 #ifdef CONFIG_MACH_M7_WLJ
 		gpio_set_value_cansleep(bl_en, 0);
@@ -1986,9 +1956,6 @@ static void m7wl_color_enhance(struct msm_fb_data_type *mfd, int on)
 		cmdreq.cmds = color_en_on_cmds;
 		cmdreq.cmds_cnt = color_en_on_cmds_count;
 		cmdreq.flags = CMD_REQ_COMMIT;
-		if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-			cmdreq.flags |= CMD_CLK_CTRL;
-
 		cmdreq.rlen = 0;
 		cmdreq.cb = NULL;
 
@@ -1999,9 +1966,6 @@ static void m7wl_color_enhance(struct msm_fb_data_type *mfd, int on)
 		cmdreq.cmds = color_en_off_cmds;
 		cmdreq.cmds_cnt = color_en_off_cmds_count;
 		cmdreq.flags = CMD_REQ_COMMIT;
-		if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-			cmdreq.flags |= CMD_CLK_CTRL;
-
 		cmdreq.rlen = 0;
 		cmdreq.cb = NULL;
 
@@ -2011,26 +1975,25 @@ static void m7wl_color_enhance(struct msm_fb_data_type *mfd, int on)
 	}
 }
 
-//static char jdi_samsung_CABC_on[2] = {0x55, 0x03};
-//static char jdi_samsung_CABC_off[2] = {0x55, 0x00};
-//static char ALPS1[20] = {0xEA, 0x01, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS2[20] = {0xEA, 0x21, 0x00, 0x20, 0x41, 0x63, 0x85, 0xA6, 0xC5, 0xE2, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS3[20] = {0xEA, 0x21, 0x00, 0x20, 0x43, 0x67, 0x8A, 0xAC, 0xCA, 0xE5, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS4[20] = {0xEA, 0x21, 0x00, 0x21, 0x45, 0x6A, 0x90, 0xB2, 0xCF, 0xE8, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS5[20] = {0xEA, 0x21, 0x00, 0x21, 0x47, 0x6E, 0x95, 0xB8, 0xD4, 0xEB, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS6[20] = {0xEA, 0x21, 0x00, 0x22, 0x48, 0x71, 0x9A, 0xBF, 0xDA, 0xED, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS7[20] = {0xEA, 0x21, 0x00, 0x22, 0x4A, 0x75, 0xA0, 0xC5, 0xDF, 0xF0, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS8[20] = {0xEA, 0x21, 0x00, 0x23, 0x4C, 0x78, 0xA5, 0xCB, 0xE4, 0xF3, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS9[20] = {0xEA, 0x21, 0x00, 0x23, 0x4E, 0x7C, 0xAA, 0xD1, 0xE9, 0xF6, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-//static char ALPS10[20] = {0xEA, 0x21, 0x00, 0x24, 0x50, 0x80, 0xB0, 0xD8, 0xEF, 0xF9, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
-/*
+static char jdi_samsung_CABC_on[2] = {0x55, 0x03};
+static char jdi_samsung_CABC_off[2] = {0x55, 0x00};
+static char ALPS1[20] = {0xEA, 0x01, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS2[20] = {0xEA, 0x21, 0x00, 0x20, 0x41, 0x63, 0x85, 0xA6, 0xC5, 0xE2, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS3[20] = {0xEA, 0x21, 0x00, 0x20, 0x43, 0x67, 0x8A, 0xAC, 0xCA, 0xE5, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS4[20] = {0xEA, 0x21, 0x00, 0x21, 0x45, 0x6A, 0x90, 0xB2, 0xCF, 0xE8, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS5[20] = {0xEA, 0x21, 0x00, 0x21, 0x47, 0x6E, 0x95, 0xB8, 0xD4, 0xEB, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS6[20] = {0xEA, 0x21, 0x00, 0x22, 0x48, 0x71, 0x9A, 0xBF, 0xDA, 0xED, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS7[20] = {0xEA, 0x21, 0x00, 0x22, 0x4A, 0x75, 0xA0, 0xC5, 0xDF, 0xF0, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS8[20] = {0xEA, 0x21, 0x00, 0x23, 0x4C, 0x78, 0xA5, 0xCB, 0xE4, 0xF3, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS9[20] = {0xEA, 0x21, 0x00, 0x23, 0x4E, 0x7C, 0xAA, 0xD1, 0xE9, 0xF6, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+static char ALPS10[20] = {0xEA, 0x21, 0x00, 0x24, 0x50, 0x80, 0xB0, 0xD8, 0xEF, 0xF9, 0xFF, 0x00, 0x20, 0x40, 0x60, 0x80, 0xA0, 0xC0, 0xE0, 0xFF};
+
 static struct dsi_cmd_desc jdi_samsung_sre1_ctrl_cmds[] = {
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 1, sizeof(jdi_samsung_CABC_on), jdi_samsung_CABC_on},
 	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(samsung_password_l2), samsung_password_l2},
 	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(ALPS1), ALPS1},
 	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(samsung_password_l2_close), samsung_password_l2_close},
 };
-
 static struct dsi_cmd_desc jdi_samsung_sre2_ctrl_cmds[] = {
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 1, sizeof(jdi_samsung_CABC_off), jdi_samsung_CABC_off},
 	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(samsung_password_l2), samsung_password_l2},
@@ -2085,8 +2048,6 @@ static struct dsi_cmd_desc jdi_samsung_sre10_ctrl_cmds[] = {
 	{DTYPE_GEN_LWRITE, 1, 0, 0, 1, sizeof(ALPS10), ALPS10},
 	{DTYPE_GEN_LWRITE, 1, 0, 0, 0, sizeof(samsung_password_l2_close), samsung_password_l2_close},
 };
-*/
-/*
 static struct dsi_cmd_desc *jdi_samsung_sre_ctrl_cmds[10] = {
 	jdi_samsung_sre1_ctrl_cmds,
 	jdi_samsung_sre2_ctrl_cmds,
@@ -2099,7 +2060,7 @@ static struct dsi_cmd_desc *jdi_samsung_sre_ctrl_cmds[10] = {
 	jdi_samsung_sre9_ctrl_cmds,
 	jdi_samsung_sre10_ctrl_cmds,
 };
-*/
+
 static char SRE_Manual1[] = {0xBB, 0x01, 0x00, 0x00};
 static char SRE_Manual2[] = {0xBB, 0x01, 0x03, 0x02};
 static char SRE_Manual3[] = {0xBB, 0x01, 0x08, 0x05};
@@ -2251,9 +2212,6 @@ static void m7wl_sre_ctrl(struct msm_fb_data_type *mfd, unsigned long level)
 		}
 
 		cmdreq.flags = CMD_REQ_COMMIT;
-		if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-			cmdreq.flags |= CMD_CLK_CTRL;
-
 		cmdreq.rlen = 0;
 		cmdreq.cb = NULL;
 		mipi_dsi_cmdlist_put(&cmdreq);
@@ -2282,14 +2240,14 @@ static char TMF_cabc_UI[] = {
 		0x20, 0x14, 0x00, 0x16,
 		0x23, 0x18, 0x2C, 0x16,
 		0x00, 0x00};
-static char samsung_MIE_ctrl1_cabc_Video[4] = {0xC0, 0x80, 0x10, 0x80};
+static char samsung_MIE_ctrl1_cabc_Video[4] = {0xC0, 0x40, 0x10, 0x80};
 static char BCSAVE_cabc_Video[] = {
-		0xCD, 0x80, 0x99, 0x67,
+		0xCD, 0x80, 0xB3, 0x67,
 		0x1C, 0x78, 0x37, 0x00,
 		0x10, 0x73, 0x41, 0x99,
 		0x10, 0x00, 0x00};
 static char TMF_cabc_Video[] = {
-		0xCE, 0x2C, 0x1C, 0x0D,
+		0xCE, 0x33, 0x1C, 0x0D,
 		0x20, 0x14, 0x00, 0x16,
 		0x23, 0x18, 0x2C, 0x16,
 		0x00, 0x00};
@@ -2310,69 +2268,23 @@ static struct dsi_cmd_desc jdi_samsung_set_cabc_Video_cmds[] = {
 
 void m7wl_set_cabc (struct msm_fb_data_type *mfd, int mode)
 {
-	int req_cabc_zoe_mode = 2;
-
-	if (set_cabc_UI_cmds == NULL || set_cabc_Video_cmds == NULL || set_cabc_Camera_cmds == NULL)
+	if (set_cabc_UI_cmds == NULL || set_cabc_Video_cmds == NULL)
 		return;
 
-	mutex_lock(&set_cabc_mutex);
-	cabc_mode = mode;
-
-	if (mode == 1) {
+	if (mode == 2) {
                cmdreq.cmds = set_cabc_UI_cmds;
                cmdreq.cmds_cnt = set_cabc_UI_cmds_count;
-	} else if (mode == 2) {
+	} else if (mode == 3) {
                cmdreq.cmds = set_cabc_Video_cmds;
                cmdreq.cmds_cnt = set_cabc_Video_cmds_count;
-	} else if (mode == 3) {
-		if (pwm_value < 168 && cur_cabc_mode == 3) {
-			req_cabc_zoe_mode = 2;
-			cmdreq.cmds = set_cabc_Video_cmds;
-			cmdreq.cmds_cnt = set_cabc_Video_cmds_count;
-		} else if (pwm_value >= 168 && cur_cabc_mode == 3) {
-			req_cabc_zoe_mode = 3;
-			cmdreq.cmds = set_cabc_Camera_cmds;
-			cmdreq.cmds_cnt = set_cabc_Camera_cmds_count;
-		} else if (pwm_value == 255) {
-			req_cabc_zoe_mode = 3;
-			cmdreq.cmds = set_cabc_Camera_cmds;
-			cmdreq.cmds_cnt = set_cabc_Camera_cmds_count;
-		} else {
-			req_cabc_zoe_mode = 2;
-			cmdreq.cmds = set_cabc_Video_cmds;
-			cmdreq.cmds_cnt = set_cabc_Video_cmds_count;
-		}
-
-		if (cur_cabc_mode != req_cabc_zoe_mode) {
-			cmdreq.flags = CMD_REQ_COMMIT;
-			if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-				cmdreq.flags |= CMD_CLK_CTRL;
-
-			cmdreq.rlen = 0;
-			cmdreq.cb = NULL;
-			mipi_dsi_cmdlist_put(&cmdreq);
-
-			cur_cabc_mode = req_cabc_zoe_mode;
-			PR_DISP_INFO("set_cabc_zoe mode = %d\n", cur_cabc_mode);
-		}
-		mutex_unlock(&set_cabc_mutex);
+	} else
 		return;
-	} else {
-		mutex_unlock(&set_cabc_mutex);
-		return;
-	}
 
 	cmdreq.flags = CMD_REQ_COMMIT;
-	if (mfd && mfd->panel_info.type == MIPI_CMD_PANEL)
-		cmdreq.flags |= CMD_CLK_CTRL;
-
 	cmdreq.rlen = 0;
 	cmdreq.cb = NULL;
 
 	mipi_dsi_cmdlist_put(&cmdreq);
-
-	cur_cabc_mode = mode;
-	mutex_unlock(&set_cabc_mutex);
 	PR_DISP_INFO("set_cabc mode = %d\n", mode);
 }
 #endif
@@ -2388,8 +2300,8 @@ static struct msm_fb_panel_data m7wl_panel_data = {
 	.on	= m7wl_lcd_on,
 	.off	= m7wl_lcd_off,
 	.set_backlight = m7wl_set_backlight,
-	.late_init = m7wl_display_on,
-	.early_off = m7wl_display_off,
+	.display_on = m7wl_display_on,
+	.display_off = m7wl_display_off,
 	.color_enhance = m7wl_color_enhance,
 #ifdef CABC_DIMMING_SWITCH
 	.dimming_on = m7wl_dim_on,
@@ -2495,11 +2407,6 @@ static int __init mipi_cmd_jdi_renesas_init(void)
 	pinfo.lcd.v_front_porch = pinfo.lcdc.v_front_porch;
 	pinfo.lcd.v_pulse_width = pinfo.lcdc.v_pulse_width;
 
-	pinfo.lcd.primary_vsync_init = pinfo.yres;
-	pinfo.lcd.primary_rdptr_irq = 0;
-	pinfo.lcd.primary_start_pos = pinfo.yres +
-			pinfo.lcd.v_back_porch + pinfo.lcd.v_front_porch - 1;
-
 	pinfo.lcdc.border_clr = 0;      
 	pinfo.lcdc.underflow_clr = 0xff;        
 	pinfo.lcdc.hsync_skew = 0;
@@ -2564,14 +2471,12 @@ static int __init mipi_cmd_jdi_renesas_init(void)
 	set_cabc_UI_cmds_count = ARRAY_SIZE(sharp_renesas_set_cabc_UI_cmds);
 	set_cabc_Video_cmds = sharp_renesas_set_cabc_Video_cmds;
 	set_cabc_Video_cmds_count = ARRAY_SIZE(sharp_renesas_set_cabc_Video_cmds);
-	set_cabc_Camera_cmds = sharp_renesas_set_cabc_Video_cmds;
-	set_cabc_Camera_cmds_count = ARRAY_SIZE(sharp_renesas_set_cabc_Video_cmds);
 #endif
 	mdp_gamma = mdp_gamma_renesas;
 	mdp_gamma_count = ARRAY_SIZE(mdp_gamma_renesas);
 
 	pwm_min = 6;
-	pwm_default = 69;
+	pwm_default = 84;
 	pwm_max = 255;
 
 	PR_DISP_INFO("%s\n", __func__);
@@ -2589,8 +2494,8 @@ static int __init mipi_cmd_sharp_init(void)
 	pinfo.pdest = DISPLAY_1;
 	pinfo.wait_cycle = 0;
 	pinfo.bpp = 24;
-    pinfo.width = 58;
-    pinfo.height = 103;
+        pinfo.width = 58;
+        pinfo.height = 103;
 	pinfo.camera_backlight = 183;
 
 	pinfo.lcdc.h_back_porch = 27;
@@ -2599,15 +2504,10 @@ static int __init mipi_cmd_sharp_init(void)
 	pinfo.lcdc.v_back_porch = 4;
 	pinfo.lcdc.v_front_porch = 4;
 	pinfo.lcdc.v_pulse_width = 2;
- 
+
 	pinfo.lcd.v_back_porch = pinfo.lcdc.v_back_porch;
 	pinfo.lcd.v_front_porch = pinfo.lcdc.v_front_porch;
 	pinfo.lcd.v_pulse_width = pinfo.lcdc.v_pulse_width;
-
-	pinfo.lcd.primary_vsync_init = pinfo.yres;
-	pinfo.lcd.primary_rdptr_irq = 0;
-	pinfo.lcd.primary_start_pos = pinfo.yres +
-			pinfo.lcd.v_back_porch + pinfo.lcd.v_front_porch - 1;
 
 	pinfo.lcdc.border_clr = 0;	
 	pinfo.lcdc.underflow_clr = 0xff;	
@@ -2674,14 +2574,12 @@ static int __init mipi_cmd_sharp_init(void)
 	set_cabc_UI_cmds_count = ARRAY_SIZE(sharp_renesas_set_cabc_UI_cmds);
 	set_cabc_Video_cmds = sharp_renesas_set_cabc_Video_cmds;
 	set_cabc_Video_cmds_count = ARRAY_SIZE(sharp_renesas_set_cabc_Video_cmds);
-	set_cabc_Camera_cmds = sharp_renesas_set_cabc_Video_cmds;
-	set_cabc_Camera_cmds_count = ARRAY_SIZE(sharp_renesas_set_cabc_Video_cmds);
 #endif
 	mdp_gamma = mdp_gamma_renesas;
 	mdp_gamma_count = ARRAY_SIZE(mdp_gamma_renesas);
 
 	pwm_min = 6;
-	pwm_default = 69;
+	pwm_default = 84;
 	pwm_max = 255;
 
 	PR_DISP_INFO("%s\n", __func__);
@@ -2713,11 +2611,6 @@ static int __init mipi_video_sharp_init(void)
 	pinfo.lcd.v_back_porch = 4;
 	pinfo.lcd.v_front_porch = 4;
 	pinfo.lcd.v_pulse_width = 2;
-
-	pinfo.lcd.primary_vsync_init = pinfo.yres;
-	pinfo.lcd.primary_rdptr_irq = 0;
-	pinfo.lcd.primary_start_pos = pinfo.yres +
-			pinfo.lcd.v_back_porch + pinfo.lcd.v_front_porch - 1;
 
 	pinfo.lcdc.border_clr = 0;	
 	pinfo.lcdc.underflow_clr = 0xff;	
@@ -2816,11 +2709,6 @@ static int __init mipi_video_sony_init(void)
 	pinfo.lcd.v_front_porch = 3;
 	pinfo.lcd.v_pulse_width = 2;
 
-	pinfo.lcd.primary_vsync_init = pinfo.yres;
-	pinfo.lcd.primary_rdptr_irq = 0;
-	pinfo.lcd.primary_start_pos = pinfo.yres +
-		pinfo.lcd.v_back_porch + pinfo.lcd.v_front_porch - 1;
-
 	pinfo.lcdc.border_clr = 0;	
 	pinfo.lcdc.underflow_clr = 0xff;	
 	pinfo.lcdc.hsync_skew = 0;
@@ -2894,8 +2782,8 @@ static int __init mipi_command_samsung_init(void)
 	pinfo.pdest = DISPLAY_1;
 	pinfo.wait_cycle = 0;
 	pinfo.bpp = 24;
-	pinfo.width = 58;
-	pinfo.height = 103;
+        pinfo.width = 58;
+        pinfo.height = 103;
 	pinfo.camera_backlight = 183;
 
 	pinfo.lcdc.h_back_porch = 27;
@@ -2908,11 +2796,6 @@ static int __init mipi_command_samsung_init(void)
 	pinfo.lcd.v_back_porch = pinfo.lcdc.v_back_porch;
 	pinfo.lcd.v_front_porch = pinfo.lcdc.v_front_porch;
 	pinfo.lcd.v_pulse_width = pinfo.lcdc.v_pulse_width;
-
-	pinfo.lcd.primary_vsync_init = pinfo.yres;
-	pinfo.lcd.primary_rdptr_irq = 0;
-	pinfo.lcd.primary_start_pos = pinfo.yres +
-			pinfo.lcd.v_back_porch + pinfo.lcd.v_front_porch - 1;
 
 	pinfo.lcdc.border_clr = 0;	
 	pinfo.lcdc.underflow_clr = 0xff;	
@@ -2984,13 +2867,14 @@ static int __init mipi_command_samsung_init(void)
 		cmd_on_cmds_count = ARRAY_SIZE(samsung_jdi_panel_cmd_mode_cmds_c2_1);
 		backlight_cmds = samsung_cmd_backlight_cmds;
 		backlight_cmds_count = ARRAY_SIZE(samsung_cmd_backlight_cmds);
+
+		sre_ctrl_cmds = jdi_samsung_sre_ctrl_cmds;
+		sre_ctrl_cmds_count = ARRAY_SIZE(jdi_samsung_sre1_ctrl_cmds);
 #ifdef CONFIG_FB_MSM_CABC_LEVEL_CONTROL
 		set_cabc_UI_cmds = jdi_samsung_set_cabc_UI_cmds;
 		set_cabc_UI_cmds_count = ARRAY_SIZE(jdi_samsung_set_cabc_UI_cmds);
-		set_cabc_Video_cmds = jdi_samsung_set_cabc_UI_cmds;
-		set_cabc_Video_cmds_count = ARRAY_SIZE(jdi_samsung_set_cabc_UI_cmds);
-		set_cabc_Camera_cmds = jdi_samsung_set_cabc_Video_cmds;
-		set_cabc_Camera_cmds_count = ARRAY_SIZE(jdi_samsung_set_cabc_Video_cmds);
+		set_cabc_Video_cmds = jdi_samsung_set_cabc_Video_cmds;
+		set_cabc_Video_cmds_count = ARRAY_SIZE(jdi_samsung_set_cabc_Video_cmds);
 #endif
 	} else {
 		strncat(ptype, "PANEL_ID_M7_JDI_SAMSUNG_C2_2", ptype_len);
@@ -2998,13 +2882,13 @@ static int __init mipi_command_samsung_init(void)
 		cmd_on_cmds_count = ARRAY_SIZE(samsung_jdi_panel_cmd_mode_cmds_c2_2);
 		backlight_cmds = samsung_cmd_backlight_cmds;
 		backlight_cmds_count = ARRAY_SIZE(samsung_cmd_backlight_cmds);
+		sre_ctrl_cmds = jdi_samsung_sre_ctrl_cmds;
+		sre_ctrl_cmds_count = ARRAY_SIZE(jdi_samsung_sre1_ctrl_cmds);
 #ifdef CONFIG_FB_MSM_CABC_LEVEL_CONTROL
 		set_cabc_UI_cmds = jdi_samsung_set_cabc_UI_cmds;
 		set_cabc_UI_cmds_count = ARRAY_SIZE(jdi_samsung_set_cabc_UI_cmds);
-		set_cabc_Video_cmds = jdi_samsung_set_cabc_UI_cmds;
-		set_cabc_Video_cmds_count = ARRAY_SIZE(jdi_samsung_set_cabc_UI_cmds);
-		set_cabc_Camera_cmds = jdi_samsung_set_cabc_Video_cmds;
-		set_cabc_Camera_cmds_count = ARRAY_SIZE(jdi_samsung_set_cabc_Video_cmds);
+		set_cabc_Video_cmds = jdi_samsung_set_cabc_Video_cmds;
+		set_cabc_Video_cmds_count = ARRAY_SIZE(jdi_samsung_set_cabc_Video_cmds);
 #endif
 	}
 
@@ -3022,7 +2906,7 @@ static int __init mipi_command_samsung_init(void)
 	color_en_off_cmds_count = ARRAY_SIZE(samsung_color_enhance_on_cmds);
 
 	pwm_min = 6;
-	pwm_default = 69;
+	pwm_default = 81;
 	pwm_max = 255;
 
 	PR_DISP_INFO("%s\n", __func__);
@@ -3095,8 +2979,8 @@ static int __init m7wl_panel_init(void)
 	if (ret)
 		pr_err(KERN_ERR "%s: failed to add i2c driver\n", __func__);
 
-	mipi_dsi_buf_alloc(&m7_panel_tx_buf, DSI_BUF_SIZE);
-	mipi_dsi_buf_alloc(&m7_panel_rx_buf, DSI_BUF_SIZE);
+	mipi_dsi_buf_alloc(&m7wl_panel_tx_buf, DSI_BUF_SIZE);
+	mipi_dsi_buf_alloc(&m7wl_panel_rx_buf, DSI_BUF_SIZE);
 
 	if (panel_type == PANEL_ID_DLXJ_SHARP_RENESAS) {
 		mipi_video_sharp_init();
@@ -3133,12 +3017,8 @@ static int __init m7wl_panel_init(void)
 	pwmic_ver = i2c_smbus_read_byte_data(blk_pwm_client, 0x1f);
 	PR_DISP_INFO("%s: PWM IC version A%d\n", __func__, pwmic_ver);
 
-#ifdef CONFIG_FB_MSM_CABC_LEVEL_CONTROL
-	mutex_init(&set_cabc_mutex);
-#endif
 	PR_DISP_INFO("%s\n", __func__);
 
 	return platform_driver_register(&this_driver);
 }
 device_initcall_sync(m7wl_panel_init);
-
