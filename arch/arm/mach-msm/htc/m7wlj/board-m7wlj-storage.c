@@ -248,7 +248,7 @@ uint32_t sdc4_gpio_off[] = {
 	GPIO_CFG(68, 0, GPIO_CFG_INPUT, GPIO_CFG_PULL_DOWN, GPIO_CFG_2MA),
 								
 };
-
+/*
 static int config_msmgpio_table(uint32_t *table, int len)
 {
 	int n, rc;
@@ -263,6 +263,7 @@ static int config_msmgpio_table(uint32_t *table, int len)
 }
 
 static unsigned int gpio_enabled_status = false;
+
 static int msm_sdcc_setup_gpio(bool enable)
 {
 	int rc;
@@ -279,6 +280,7 @@ static int msm_sdcc_setup_gpio(bool enable)
 	gpio_enabled_status = enable;
 	return rc;
 }
+*/
 
 #define MSM_MPM_PIN_SDC1_DAT1	17
 #define MSM_MPM_PIN_SDC3_DAT1	21
@@ -313,10 +315,10 @@ static unsigned int sdc4_sup_clk_rates[] = {
 	400000, 24000000, 48000000, 96000000, 192000000
 };
 
-static unsigned int sdc4_slot_type = MMC_TYPE_SD;
+//static unsigned int sdc4_slot_type = MMC_TYPE_SD;
 static struct mmc_platform_data m7wlj_sdc4_data = {
 	.ocr_mask       = MMC_VDD_27_28 | MMC_VDD_28_29,
-	.config_sdgpio  = msm_sdcc_setup_gpio,
+//	.config_sdgpio  = msm_sdcc_setup_gpio,
 	.mmc_bus_width  = MMC_CAP_4_BIT_DATA,
 	.sup_clk_table	= sdc4_sup_clk_rates,
 	.sup_clk_cnt	= ARRAY_SIZE(sdc4_sup_clk_rates),
@@ -325,7 +327,7 @@ static struct mmc_platform_data m7wlj_sdc4_data = {
 	.status_irq	= PM8921_GPIO_IRQ(PM8921_IRQ_BASE, 25),
 	.irq_flags	= IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,
 	.is_status_gpio_active_low = 1,
-	.slot_type      = &sdc4_slot_type,
+//	.slot_type      = &sdc4_slot_type,
 #if 0
 	.xpc_cap	= 1,
 	.uhs_caps	= (MMC_CAP_UHS_SDR12 | MMC_CAP_UHS_SDR25 |

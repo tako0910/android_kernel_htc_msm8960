@@ -73,7 +73,7 @@
 #include <mach/restart.h>
 
 #include "msm_watchdog.h"
-#include "board-m7.h"
+#include "board-m7wlj.h"
 #include "clock.h"
 #include "spm.h"
 #include <mach/mpm.h>
@@ -714,7 +714,7 @@ static void __init reserve_ion_memory(void)
 
 static void __init reserve_mdp_memory(void)
 {
-	m7_mdp_writeback(apq8064_reserve_table);
+	m7wl_mdp_writeback(apq8064_reserve_table);
 }
 
 static void __init reserve_cache_dump_memory(void)
@@ -753,12 +753,12 @@ static struct reserve_info apq8064_reserve_info __initdata = {
 	.paddr_to_memtype = apq8064_paddr_to_memtype,
 };
 
-static void __init m7_reserve(void)
+static void __init m7wl_reserve(void)
 {
 	msm_reserve();
 }
 
-static void __init m7_early_reserve(void)
+static void __init m7wl_early_reserve(void)
 {
 	reserve_info = &apq8064_reserve_info;
 }
@@ -990,7 +990,7 @@ static struct msm_otg_platform_data msm_otg_pdata = {
 	.ldo_power_collapse	= POWER_COLLAPSE_LDO1V8,
 };
 
-static int64_t m7_get_usbid_adc(void)
+static int64_t m7wl_get_usbid_adc(void)
 {
 	struct pm8xxx_adc_chan_result result;
 	int err = 0, adc =0;
@@ -1015,7 +1015,7 @@ struct pm8xxx_gpio_init usb_id_pmic_gpio[] = {
 			 PM_GPIO_FUNC_NORMAL, 0, 0),
 };
 
-static void m7_config_usb_id_gpios(bool output)
+static void m7wl_config_usb_id_gpios(bool output)
 {
 	int rc;
 	rc = pm8xxx_gpio_config(usb_id_pmic_gpio[0].gpio, &usb_id_pmic_gpio[0].config);
@@ -1033,17 +1033,17 @@ static void m7_config_usb_id_gpios(bool output)
 
 #ifdef CONFIG_FB_MSM_HDMI_MHL
 static void mhl_sii9234_1v2_power(bool enable);
-static void m7_usb_dpdn_switch(int path);
+static void m7wl_usb_dpdn_switch(int path);
 #endif
 
 static struct cable_detect_platform_data cable_detect_pdata = {
 	.detect_type		= CABLE_TYPE_PMIC_ADC,
 	.usb_id_pin_gpio	= USB1_HS_ID_GPIO,
-	.get_adc_cb		= m7_get_usbid_adc,
-	.config_usb_id_gpios	= m7_config_usb_id_gpios,
+	.get_adc_cb		= m7wl_get_usbid_adc,
+	.config_usb_id_gpios	= m7wl_config_usb_id_gpios,
 #ifdef CONFIG_FB_MSM_HDMI_MHL
 	.mhl_1v2_power		= mhl_sii9234_1v2_power,
-	.usb_dpdn_switch	= m7_usb_dpdn_switch,
+	.usb_dpdn_switch	= m7wl_usb_dpdn_switch,
 #endif
 };
 
@@ -1055,7 +1055,7 @@ static struct platform_device cable_detect_device = {
 	},
 };
 
-static void m7_cable_detect_register(void)
+static void m7wl_cable_detect_register(void)
 {
 	int rc;
 
@@ -1073,21 +1073,21 @@ static void m7_cable_detect_register(void)
 	platform_device_register(&cable_detect_device);
 }
 
-void m7_pm8xxx_adc_device_register(void)
+void m7wl_pm8xxx_adc_device_register(void)
 {
 	pr_info("%s: Register PM8XXX ADC device. rev: %d\n",
 		__func__, system_rev);
-	m7_cable_detect_register();
+	m7wl_cable_detect_register();
 }
 
 struct pm8xxx_gpio_init otg_pmic_gpio_pvt[] = {
-	PM8XXX_GPIO_INIT(VREG_S4_1V8_PVT, PM_GPIO_DIR_OUT,
+	PM8XXX_GPIO_INIT(MHL_USBz_SW, PM_GPIO_DIR_OUT,
 			 PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
 			 PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
 			 PM_GPIO_FUNC_NORMAL, 0, 0),
 };
 
-void m7_add_usb_devices(void)
+void m7wl_add_usb_devices(void)
 {
 	int rc;
 
@@ -1252,7 +1252,7 @@ static struct slim_device apq8064_slim_tabla20 = {
 	},
 };
 
-static struct synaptics_virtual_key m7_vk_data[] = {
+static struct synaptics_virtual_key m7wl_vk_data[] = {
 	{
 		.index = 1,
 		.keycode = KEY_BACK,
@@ -1342,7 +1342,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x00, 0x08, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1405,7 +1405,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x01, 0x08, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1468,7 +1468,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x02, 0x08, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1531,7 +1531,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x00, 0x05, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1595,7 +1595,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x01, 0x05, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1659,7 +1659,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x02, 0x05, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1725,7 +1725,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x00, 0x02, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1791,7 +1791,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x01, 0x02, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1857,7 +1857,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x02, 0x02, 0x00, 0x7F, 0x03, 0x1E,
 			0x14, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1923,7 +1923,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0x02, 0x00, 0x00, 0x7F, 0x03, 0x1E,
 			0x05, 0x09, 0x00, 0x01, 0x01, 0x00, 0x10, 0x54,
@@ -1987,7 +1987,7 @@ static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = {
 		.psensor_detection = 1,
 		.reduce_report_level = {60, 60, 50, 0, 0},
 		.block_touch_time_near = 200,
-		.virtual_key = m7_vk_data,
+		.virtual_key = m7wl_vk_data,
 		.lpm_power = synaptics_power_LPM,
 		.config = {0x33, 0x32, 0xFF, 0x01, 0x04, 0x7F, 0x03, 0x14,
 			0x14, 0x08, 0x00, 0x19, 0x19, 0x00, 0x10, 0x54,
@@ -2500,7 +2500,7 @@ static struct resource mdm_resources[] = {
 	},
 };
 
-static struct platform_device mdm_m7_device = {
+static struct platform_device mdm_m7wl_device = {
 	.name		= "mdm2_modem",
 	.id		= -1,
 	.num_resources	= ARRAY_SIZE(mdm_resources),
@@ -2532,7 +2532,7 @@ static struct msm_thermal_data msm_thermal_pdata = {
 };
 
 #define MSM_SHARED_RAM_PHYS 0x80000000
-static void __init m7_map_io(void)
+static void __init m7wl_map_io(void)
 {
 	msm_shared_ram_phys = MSM_SHARED_RAM_PHYS;
 	msm_map_apq8064_io();
@@ -2540,7 +2540,7 @@ static void __init m7_map_io(void)
 		pr_err("socinfo_init() failed!\n");
 }
 
-static void __init m7_init_irq(void)
+static void __init m7wl_init_irq(void)
 {
 	struct msm_mpm_device_data *data = NULL;
 
@@ -2557,7 +2557,7 @@ static struct platform_device msm8064_device_saw_regulator_core0 = {
 	.name	= "saw-regulator",
 	.id	= 0,
 	.dev	= {
-		.platform_data = &m7_saw_regulator_pdata_8921_s5,
+		.platform_data = &m7wl_saw_regulator_pdata_8921_s5,
 	},
 };
 
@@ -2565,7 +2565,7 @@ static struct platform_device msm8064_device_saw_regulator_core1 = {
 	.name	= "saw-regulator",
 	.id	= 1,
 	.dev	= {
-		.platform_data = &m7_saw_regulator_pdata_8921_s6,
+		.platform_data = &m7wl_saw_regulator_pdata_8921_s6,
 	},
 };
 
@@ -2573,7 +2573,7 @@ static struct platform_device msm8064_device_saw_regulator_core2 = {
 	.name	= "saw-regulator",
 	.id	= 2,
 	.dev	= {
-		.platform_data = &m7_saw_regulator_pdata_8821_s0,
+		.platform_data = &m7wl_saw_regulator_pdata_8821_s0,
 	},
 };
 
@@ -2581,7 +2581,7 @@ static struct platform_device msm8064_device_saw_regulator_core3 = {
 	.name	= "saw-regulator",
 	.id	= 3,
 	.dev	= {
-		.platform_data = &m7_saw_regulator_pdata_8821_s1,
+		.platform_data = &m7wl_saw_regulator_pdata_8821_s1,
 
 	},
 };
@@ -2905,7 +2905,7 @@ static void __init apq8064ab_update_krait_spm(void)
 	}
 }
 
-static void __init m7_init_buses(void)
+static void __init m7wl_init_buses(void)
 {
 	msm_bus_rpm_set_mt_mask();
 	msm_bus_8064_apps_fabric_pdata.rpm_enabled = 1;
@@ -2921,149 +2921,40 @@ static void __init m7_init_buses(void)
 	msm_bus_8064_cpss_fpb.dev.platform_data = &msm_bus_8064_cpss_fpb_pdata;
 }
 
-static struct platform_device m7_device_ext_5v_vreg __devinitdata = {
+static struct platform_device m7wl_device_ext_5v_vreg __devinitdata = {
 	.name	= GPIO_REGULATOR_DEV_NAME,
 	.id	= PM8921_MPP_PM_TO_SYS(7),
 	.dev	= {
 		.platform_data
-			= &m7_gpio_regulator_pdata[GPIO_VREG_ID_EXT_5V],
+			= &m7wl_gpio_regulator_pdata[GPIO_VREG_ID_EXT_5V],
 	},
 };
 
-static struct platform_device m7_device_ext_mpp8_vreg __devinitdata = {
+static struct platform_device m7wl_device_ext_mpp8_vreg __devinitdata = {
 	.name	= GPIO_REGULATOR_DEV_NAME,
 	.id	= PM8921_MPP_PM_TO_SYS(8),
 	.dev	= {
 		.platform_data
-			= &m7_gpio_regulator_pdata[GPIO_VREG_ID_EXT_MPP8],
+			= &m7wl_gpio_regulator_pdata[GPIO_VREG_ID_EXT_MPP8],
 	},
 };
 
-static struct platform_device m7_device_ext_ts_sw_vreg __devinitdata = {
+static struct platform_device m7wl_device_ext_ts_sw_vreg __devinitdata = {
 	.name	= GPIO_REGULATOR_DEV_NAME,
 	.id	= PM8921_GPIO_PM_TO_SYS(23),
 	.dev	= {
 		.platform_data
-			= &m7_gpio_regulator_pdata[GPIO_VREG_ID_EXT_TS_SW],
+			= &m7wl_gpio_regulator_pdata[GPIO_VREG_ID_EXT_TS_SW],
 	},
 };
 
-static struct platform_device m7_device_rpm_regulator __devinitdata = {
+static struct platform_device m7wl_device_rpm_regulator __devinitdata = {
 	.name	= "rpm-regulator",
 	.id	= -1,
 	.dev	= {
-		.platform_data = &m7_rpm_regulator_pdata,
+		.platform_data = &m7wl_rpm_regulator_pdata,
 	},
 };
-
-#ifdef CONFIG_SERIAL_CIR
-static DEFINE_MUTEX(cir_power_lock);
-static DEFINE_MUTEX(cir_path_lock);
-static struct regulator *reg_cir_3v;
-
-static int cir_power(int on)
-{
-	int rc = 0;
-
-	mutex_lock(&cir_power_lock);
-	pr_info("[CIR] %s on = %d, reg_cir_3v = 0x%x\n",
-							__func__, on, (unsigned int)reg_cir_3v);
-
-	if (reg_cir_3v == NULL) {
-		reg_cir_3v = regulator_get(NULL, "cir_3v");
-		if (IS_ERR(reg_cir_3v)) {
-			pr_err("%s: Unable to get reg_cir_3v\n", __func__);
-			mutex_unlock(&cir_power_lock);
-			return -ENODEV;
-		}
-	}
-
-	if(board_mfg_mode() == MFG_MODE_POWER_TEST) {
-		pr_info("[CIR] %s recovery mode, power off CIR\n", __func__);
-		on = 0;
-	}
-
-	if(on) {
-		rc = regulator_set_optimum_mode(reg_cir_3v, 100000);
-		if (rc < 0) {
-			pr_err("[CIR] enter high power mode fail, rc = %d\n", rc);
-			mutex_unlock(&cir_power_lock);
-			return -EINVAL;
-		}
-		rc = regulator_enable(reg_cir_3v);
-		if (rc) {
-			pr_err("[CIR] cir_3v regulator enable failed, rc=%d\n", rc);
-			mutex_unlock(&cir_power_lock);
-			return rc;
-		}
-
-		pr_info("[CIR] %s(on): success\n", __func__);
-	}else {
-		rc = regulator_set_optimum_mode(reg_cir_3v, 0);
-		if (rc < 0) {
-			pr_err("[CIR] enter low power mode fail, rc = %d\n", rc);
-			mutex_unlock(&cir_power_lock);
-			return -EINVAL;
-		}
-		rc = regulator_enable(reg_cir_3v);
-		if (rc) {
-			pr_err("[CIR] cir_3v regulator enable failed, rc=%d\n", rc);
-			mutex_unlock(&cir_power_lock);
-			return rc;
-		}
-		pr_info("[CIR] %s(off): success\n", __func__);
-	}
-	mutex_unlock(&cir_power_lock);
-
-	return rc;
-}
-
-static int cir_reset(void)
-{
-	pr_info("[CIR] %s, CIR reset GPIO %d\n", __func__,
-				PM8921_GPIO_PM_TO_SYS(CIR_RST));
-
-	gpio_direction_output(PM8921_GPIO_PM_TO_SYS(CIR_RST),0);
-	msleep(2);
-	gpio_direction_output(PM8921_GPIO_PM_TO_SYS(CIR_RST),1);
-
-	return 0;
-}
-
-static struct cir_platform_data m7_cir_gsbi3_pdata = {
-	.cir_reset = cir_reset,
-	.cir_power = cir_power,
-};
-
-static struct pm8xxx_gpio_init cir_rst_gpio =
-	PM8XXX_GPIO_INIT(CIR_RST, PM_GPIO_DIR_OUT,
-					 PM_GPIO_OUT_BUF_CMOS, 1, PM_GPIO_PULL_NO,
-					 PM_GPIO_VIN_L17, PM_GPIO_STRENGTH_LOW,
-					 PM_GPIO_FUNC_NORMAL, 0, 0);
-
-static uint32_t msm_uart_gsbi3_gpio[] = {
-	GPIO_CFG(CPU_CIR_TX, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-	GPIO_CFG(CPU_CIR_RX, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_4MA),
-};
-
-static void msm_uart_gsbi3_gpio_init(void)
-{
-	gpio_tlmm_config(msm_uart_gsbi3_gpio[0], GPIO_CFG_ENABLE);
-	gpio_tlmm_config(msm_uart_gsbi3_gpio[1], GPIO_CFG_ENABLE);
-	pr_info("%s ok!\n", __func__);
-}
-
-static void __init m7_cir_init(void)
-{
-	gpio_request(PM8921_GPIO_PM_TO_SYS(CIR_LS_EN), "cir_ls_en");
-	gpio_request(PM8921_GPIO_PM_TO_SYS(CIR_RST), "cir_reset");
-
-	msm_uart_gsbi3_gpio_init();
-	pm8xxx_gpio_config(cir_rst_gpio.gpio, &cir_rst_gpio.config);
-	apq8064_device_uart_gsbi3.dev.platform_data =
-					&m7_cir_gsbi3_pdata;
-}
-#endif /* CONFIG_SERIAL_CIR */
 
 struct pm8xxx_gpio_init headset_pmic_gpio_xa[] = {
 	PM8XXX_GPIO_INIT(V_AUD_HSMIC_2V85_EN, PM_GPIO_DIR_OUT,
@@ -3599,9 +3490,9 @@ static struct platform_device *common_devices[] __initdata = {
 #ifdef CONFIG_GSBI4_UARTDM
 	&msm_device_uart_dm4,
 #endif
-	&m7_device_ext_5v_vreg,
-	&m7_device_ext_mpp8_vreg,
-	&m7_device_ext_ts_sw_vreg,
+	&m7wl_device_ext_5v_vreg,
+	&m7wl_device_ext_mpp8_vreg,
+	&m7wl_device_ext_ts_sw_vreg,
 	&apq8064_device_ssbi_pmic1,
 	&apq8064_device_ssbi_pmic2,
 	&msm_device_smd_apq8064,
@@ -3720,7 +3611,7 @@ static struct platform_device *common_devices[] __initdata = {
 #endif
 #ifdef CONFIG_MSM_CAMERA
 #ifdef CONFIG_RAWCHIPII
-	&m7_msm_rawchip_device,
+	&m7wlj_msm_rawchip_device,
 #endif
 #endif
 };
@@ -3747,8 +3638,8 @@ static struct msm_serial_hs_platform_data msm_uart_dm6_pdata = {
 	.host_wakeup_pin = PM8921_GPIO_PM_TO_SYS(BT_HOST_WAKE),
 };
 
-static struct platform_device m7_rfkill = {
-	.name = "m7_rfkill",
+static struct platform_device m7wl_rfkill = {
+	.name = "m7wl_rfkill",
 	.id = -1,
 };
 #endif
@@ -3807,7 +3698,7 @@ static struct msm_i2c_platform_data apq8064_i2c_qup_gsbi4_pdata = {
 
 #define GSBI_DUAL_MODE_CODE 0x60
 #define MSM_GSBI1_PHYS		0x12440000
-static void __init m7_i2c_init(void)
+static void __init m7wl_i2c_init(void)
 {
 	void __iomem *gsbi_mem;
 
@@ -3858,7 +3749,7 @@ static struct regulator *motion_sensor_vreg_8921_l17;
 static struct regulator *g_sensor_vreg_8921_l17;
 static struct regulator *compass_vreg_8921_l17;
 static struct regulator *gyro_vreg_8921_l17;
-static int m7_mpu3050_sensor_power_LPM(int on)
+static int m7wl_mpu3050_sensor_power_LPM(int on)
 {
 	int rc = 0;
 
@@ -3942,7 +3833,7 @@ static struct mpu3050_platform_data mpu3050_data = {
 				  0, 1,  0,
 				  0, 0, -1},
 	},
-	.power_LPM = m7_mpu3050_sensor_power_LPM,
+	.power_LPM = m7wl_mpu3050_sensor_power_LPM,
 };
 
 static struct i2c_board_info __initdata mpu3050_GSBI12_boardinfo[] = {
@@ -3953,7 +3844,7 @@ static struct i2c_board_info __initdata mpu3050_GSBI12_boardinfo[] = {
 	},
 };
 
-static int m7_g_sensor_power_LPM(int on)
+static int m7wl_g_sensor_power_LPM(int on)
 {
 	int rc = 0;
 
@@ -4023,10 +3914,10 @@ static struct bma250_platform_data gsensor_bma250_platform_data = {
 	.negate_x = 0,
 	.negate_y = 1,
 	.negate_z = 1,
-	.power_LPM = m7_g_sensor_power_LPM,
+	.power_LPM = m7wl_g_sensor_power_LPM,
 };
 
-static int m7_compass_power_LPM(int on)
+static int m7wl_compass_power_LPM(int on)
 {
 	int rc = 0;
 
@@ -4092,10 +3983,10 @@ static struct akm8963_platform_data compass_platform_data = {
 	.outbit = 1,
 	.gpio_DRDY = PM8921_GPIO_PM_TO_SYS(COMPASS_AKM_INT),
 	.gpio_RST = 0,
-	.power_LPM = m7_compass_power_LPM,
+	.power_LPM = m7wl_compass_power_LPM,
 };
 
-static int m7_gyro_power_LPM(int on)
+static int m7wl_gyro_power_LPM(int on)
 {
 	int rc = 0;
 
@@ -4168,7 +4059,7 @@ static struct r3gd20_gyr_platform_data gyro_platform_data = {
 	.min_interval = R3GD20_MIN_POLL_PERIOD_MS,
 	.watermark = 0,
 	.fifomode = 0,
-	.power_LPM = m7_gyro_power_LPM,
+	.power_LPM = m7wl_gyro_power_LPM,
 };
 
 static struct i2c_board_info motion_sensor_gsbi_2_info[] = {
@@ -4357,23 +4248,6 @@ static struct i2c_board_info msm_i2c_gsbi1_rt5501_info[] = {
 };
 #endif
 
-#ifdef CONFIG_SENSORS_NFC_PN544
-static struct pn544_i2c_platform_data nfc_platform_data = {
-	.irq_gpio = NFC_IRQ,
-	.ven_gpio = PM8921_GPIO_PM_TO_SYS(NFC_VEN),
-	.firm_gpio = PM8921_GPIO_PM_TO_SYS(NFC_DL_MODE),
-	.ven_isinvert = 1,
-};
-
-static struct i2c_board_info pn544_i2c_boardinfo[] = {
-	{
-		I2C_BOARD_INFO(PN544_I2C_NAME, 0x50 >> 1),
-		.platform_data = &nfc_platform_data,
-		.irq = MSM_GPIO_TO_INT(NFC_IRQ),
-	},
-};
-#endif
-
 static struct i2c_board_info pwm_i2c_devices[] = {
 	{
 		I2C_BOARD_INFO("pwm_i2c", 0x6C >> 1),
@@ -4395,7 +4269,7 @@ static struct TPS61310_flashlight_platform_data flashlight_data = {
 	.gpio_init = config_flashlight_gpios,
 	.tps61310_strb0 = PM8921_GPIO_PM_TO_SYS(FLASH_EN),
 	.tps61310_strb1 = PM8921_GPIO_PM_TO_SYS(TORCH_FLASHz),
-	.tps61310_reset = PM8921_GPIO_PM_TO_SYS(FLASH_RST),
+//	.tps61310_reset = PM8921_GPIO_PM_TO_SYS(FLASH_RST),
 	.mode_pin_suspend_state_low = 1,
 	.flash_duration_ms = 600,
 	.enable_FLT_1500mA = 1,
@@ -4414,20 +4288,20 @@ static struct i2c_board_info i2c_tps61310_flashlight[] = {
 
 #ifdef CONFIG_FB_MSM_HDMI_MHL
 static struct pm8xxx_gpio_init switch_to_usb_pmic_gpio_table[] = {
-	PM8XXX_GPIO_INIT(USBz_AUDIO_SW, PM_GPIO_DIR_OUT,
+	PM8XXX_GPIO_INIT(MHL_USBz_SW, PM_GPIO_DIR_OUT,
 			 PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
 			 PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
 			 PM_GPIO_FUNC_NORMAL, 0, 0),
 };
 
 static struct pm8xxx_gpio_init switch_to_mhl_pmic_gpio_table[] = {
-	PM8XXX_GPIO_INIT(USBz_AUDIO_SW, PM_GPIO_DIR_OUT,
+	PM8XXX_GPIO_INIT(MHL_USBz_SW, PM_GPIO_DIR_OUT,
 			 PM_GPIO_OUT_BUF_CMOS, 1, PM_GPIO_PULL_NO,
 			 PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
 			 PM_GPIO_FUNC_NORMAL, 0, 0),
 };
 
-static void m7_usb_dpdn_switch(int path)
+static void m7wl_usb_dpdn_switch(int path)
 {
 	switch (path) {
 	case PATH_USB:
@@ -4638,7 +4512,7 @@ static int mhl_sii9234_power(int on)
 static T_MHL_PLATFORM_DATA mhl_sii9234_device_data = {
 	.gpio_intr = MHL_INT,
 	.ci2ca = 0,
-	.mhl_usb_switch = m7_usb_dpdn_switch,
+	.mhl_usb_switch = m7wl_usb_dpdn_switch,
 	.mhl_1v2_power = mhl_sii9234_1v2_power,
 	.mhl_lpm_power = mhl_sii9234_lpm_power,
 	.enable_5v = hdmi_enable_5v,
@@ -4656,7 +4530,169 @@ static struct i2c_board_info msm_i2c_mhl_sii9234_info[] =
 #endif /* CONFIG_FB_MSM_HDMI_MHL_SII9234 */
 #endif /* CONFIG_FB_MSM_HDMI_MHL */
 
-static struct i2c_registry m7_i2c_devices[] __initdata = {
+#ifdef CONFIG_VIDEO_NMI
+
+#define GPO_7_DATA_MASK          0x01
+#define GPO_8_DATA_MASK          0x02
+#define GPO_9_DATA_MASK          0x04
+#define GPO_10_DATA_MASK         0x08
+
+#define ONESEG_RST          IOEXT_GPIO_1
+#define ONESEG_EN           IOEXT_GPIO_3
+#define ONESEG_LNA_EN       IOEXT_GPIO_4
+
+static struct regulator *reg_8921_l28;
+
+static int oneseg_tuner_power_enable(char *power, unsigned volt, struct regulator **tuner_power)
+{
+    int rc;
+
+    if (power == NULL)
+       return -ENODEV;
+
+    *tuner_power = regulator_get(NULL, power);
+
+    if (IS_ERR(*tuner_power)) {
+        printk(KERN_ERR "[1SEG] %s: Unable to get %s\n", __func__, power);
+        return -ENODEV;
+    }
+
+    if (volt == 1200000) {
+        rc = regulator_set_voltage(*tuner_power, volt, volt);
+        if (rc < 0) {
+            printk(KERN_ERR "[1SEG] %s: unable to set %s voltage to %d rc:%d\n", __func__, power, volt, rc);
+            regulator_put(*tuner_power);
+            *tuner_power = NULL;
+            return -ENODEV;
+        }
+    }
+    else
+    {
+        printk(KERN_ERR "[1SEG] %s: Volt is not set 2V8, set volt is %d\n", __func__, volt);
+    }
+
+    rc = regulator_enable(*tuner_power);
+    if (rc < 0) {
+        printk(KERN_ERR "[1SEG] %s: Enable regulator %s failed\n", __func__, power);
+        regulator_put(*tuner_power);
+        *tuner_power = NULL;
+        return -ENODEV;
+    }
+
+    return rc;
+}
+
+static int oneseg_tuner_power_disable(struct regulator *tuner_power)
+{
+    int rc;
+    if (tuner_power == NULL)
+        return -ENODEV;
+
+    if (IS_ERR(tuner_power)) {
+        printk(KERN_ERR "[1SEG] %s: Invalid requlator ptr\n", __func__);
+        return -ENODEV;
+    }
+
+    rc = regulator_disable(tuner_power);
+    if (rc < 0)
+        printk(KERN_ERR "[1SEG] %s: disable regulator failed\n", __func__);
+
+        regulator_put(tuner_power);
+        tuner_power = NULL;
+        return rc;
+}
+
+int oneseg_select_antenna(unsigned char data)
+{
+        int rc = 0;
+
+            return rc;
+}
+
+int oneseg_power(int on)
+{
+    int rc = 0;
+
+    if (on)
+    {
+        printk(KERN_INFO "[1SEG] %s: on \n", __func__);
+
+        
+        oneseg_tuner_power_enable("8921_l28", 1200000, &reg_8921_l28);
+
+       
+        rc = ioext_gpio_set_value(ONESEG_EN, 1);
+        printk(KERN_INFO "[1SEG] %s: set ONESEG_EN to 1, rc=%d \n", __func__, rc);
+
+        
+        rc = ioext_gpio_set_value(ONESEG_RST, 1);
+        printk(KERN_INFO "[1SEG] %s: set ONESEG_RST to 1, rc=%d \n", __func__, rc);
+
+        msleep(10);
+
+        
+        rc = ioext_gpio_set_value(ONESEG_RST, 0);
+        printk(KERN_INFO "[1SEG] %s: set ONESEG_RST to 0, rc=%d \n", __func__, rc);
+
+        msleep(1);
+
+        
+        rc = ioext_gpio_set_value(ONESEG_RST, 1);
+        msleep(10);
+        printk(KERN_INFO "[1SEG] %s: set ONESEG_RST to 1, rc=%d \n", __func__, rc);
+
+        msleep(10);
+
+        
+        rc = ioext_gpio_set_value(ONESEG_LNA_EN, 1);
+        printk(KERN_INFO "[1SEG] %s: set ONESEG_LNA_EN to 1, rc=%d \n", __func__, rc);
+    }
+    else
+    {
+        
+        printk(KERN_INFO "[1SEG] %s: off \n", __func__);
+
+        
+        rc = ioext_gpio_set_value(ONESEG_LNA_EN, 0);
+        printk(KERN_INFO "[1SEG] %s: unset ONESEG_LNA_EN to 0, rc=%d \n", __func__, rc);
+
+        
+        rc = ioext_gpio_set_value(ONESEG_EN, 0);
+        printk(KERN_INFO "[1SEG] %s: unset ONESEG_EN to 0, rc=%d \n", __func__, rc);
+
+        msleep(10);
+
+        
+        oneseg_tuner_power_disable(reg_8921_l28);
+
+    }
+    return rc;
+}
+EXPORT_SYMBOL(oneseg_power);
+
+static void m7wlj_init_1seg(void)
+{
+    printk(KERN_INFO "m7wlj: %s\n", __func__);
+        platform_device_register(&nm32x_62x_tsi_device);
+}
+#endif
+
+/*
+#define RCV_PAMP_PMGPIO 24
+static struct pm8xxx_gpio_init receiver_pmic_gpio[] = {
+        PM8XXX_GPIO_INIT(RCV_PAMP_PMGPIO, PM_GPIO_DIR_OUT,
+                         PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_NO,
+                         PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
+                         PM_GPIO_FUNC_NORMAL, 0, 0),
+};
+
+static void __init m7wlj_receiver_init(void)
+{
+        pm8xxx_gpio_config(receiver_pmic_gpio[0].gpio,
+                        &receiver_pmic_gpio[0].config);
+}
+*/
+static struct i2c_registry m7wl_i2c_devices[] __initdata = {
 	{
 		I2C_SURF | I2C_FFA,
 		APQ_8064_GSBI3_QUP_I2C_BUS_ID,
@@ -4675,14 +4711,6 @@ static struct i2c_registry m7_i2c_devices[] __initdata = {
 		APQ_8064_GSBI1_QUP_I2C_BUS_ID,
 		msm_i2c_gsbi1_rt5501_info,
 		ARRAY_SIZE(msm_i2c_gsbi1_rt5501_info),
-	},
-#endif
-#ifdef CONFIG_SENSORS_NFC_PN544
-	{
-		I2C_SURF | I2C_FFA,
-		APQ_8064_GSBI2_QUP_I2C_BUS_ID,
-		pn544_i2c_boardinfo,
-		ARRAY_SIZE(pn544_i2c_boardinfo),
 	},
 #endif
 	{
@@ -4727,11 +4755,11 @@ static void __init register_i2c_devices(void)
 #endif
 #endif
 	/* Run the array and install devices as appropriate */
-	for (i = 0; i < ARRAY_SIZE(m7_i2c_devices); ++i) {
-		if (m7_i2c_devices[i].machs & mach_mask)
-			i2c_register_board_info(m7_i2c_devices[i].bus,
-						m7_i2c_devices[i].info,
-						m7_i2c_devices[i].len);
+	for (i = 0; i < ARRAY_SIZE(m7wl_i2c_devices); ++i) {
+		if (m7wl_i2c_devices[i].machs & mach_mask)
+			i2c_register_board_info(m7wl_i2c_devices[i].bus,
+						m7wl_i2c_devices[i].info,
+						m7wl_i2c_devices[i].len);
 	}
 
 	if (gy_type == 2) {
@@ -4778,7 +4806,7 @@ static void __init apq8064ab_update_retention_spm(void)
 	}
 }
 
-static void __init m7_common_init(void)
+static void __init m7wl_common_init(void)
 {
 	int rc = 0;
 	struct kobject *properties_kobj;
@@ -4812,12 +4840,12 @@ static void __init m7_common_init(void)
 	BUG_ON(msm_rpm_init(&apq8064_rpm_data));
 	BUG_ON(msm_rpmrs_levels_init(&msm_rpmrs_data));
 	regulator_suppress_info_printing();
-	platform_device_register(&m7_device_rpm_regulator);
+	platform_device_register(&m7wl_device_rpm_regulator);
 	if (msm_xo_init())
 		pr_err("Failed to initialize XO votes\n");
 	msm_clock_init(&apq8064_clock_init_data);
-	m7_init_gpiomux();
-	m7_i2c_init();
+	m7wlj_init_gpiomux();
+	m7wl_i2c_init();
 
 	if (board_build_flag() == 1) {
 		for (rc = 0; rc < ARRAY_SIZE(syn_ts_3k_data); rc++)
@@ -4828,31 +4856,31 @@ static void __init m7_common_init(void)
 
 	apq8064_device_qup_spi_gsbi5.dev.platform_data =
 						&apq8064_qup_spi_gsbi5_pdata;
-	m7_init_pmic();
+	m7wl_init_pmic();
 
 	android_usb_pdata.swfi_latency =
 		msm_rpmrs_levels[0].latency_us;
 
 	apq8064_device_otg.dev.platform_data = &msm_otg_pdata;
-	m7_init_buses();
+	m7wl_init_buses();
 #ifdef CONFIG_HTC_BATT_8960
 	htc_battery_cell_init(htc_battery_cells, ARRAY_SIZE(htc_battery_cells));
 #endif
 	platform_add_devices(common_devices, ARRAY_SIZE(common_devices));
 #ifdef CONFIG_SERIAL_CIR
-	m7_cir_init();
+//	m7wl_cir_init();
 #endif
 	msm_hsic_pdata.swfi_latency =
 		msm_rpmrs_levels[0].latency_us;
 	apq8064_device_hsic_host.dev.platform_data = &msm_hsic_pdata;
 	device_initialize(&apq8064_device_hsic_host.dev);
-	m7_pm8xxx_gpio_mpp_init();
-	m7_init_mmc();
-	m7_wifi_init();
+	m7wl_pm8xxx_gpio_mpp_init();
+	m7wlj_init_mmc();
+	m7wl_wifi_init();
 
 	pr_info("%s: Add MDM2 device\n", __func__);
-	mdm_m7_device.dev.platform_data = &mdm_platform_data;
-	platform_device_register(&mdm_m7_device);
+	mdm_m7wl_device.dev.platform_data = &mdm_platform_data;
+	platform_device_register(&mdm_m7wl_device);
 
 	platform_device_register(&apq8064_slim_ctrl);
 	slim_register_board_info(apq8064_slim_devices,
@@ -4867,32 +4895,32 @@ static void __init m7_common_init(void)
 	}
 
 	headset_device_register();
-	m7_init_keypad();
+	m7wl_init_keypad();
 
 	pm_qos_add_request(&pm_qos_req_dma, PM_QOS_CPU_DMA_LATENCY, PM_QOS_DEFAULT_VALUE);
 }
 
-static void __init m7_allocate_memory_regions(void)
+static void __init m7wl_allocate_memory_regions(void)
 {
-	m7_allocate_fb_region();
+	m7wl_allocate_fb_region();
 }
 
-static void __init m7_cdp_init(void)
+static void __init m7wl_cdp_init(void)
 {
 	if (meminfo_init(SYS_MEMORY, SZ_256M) < 0)
 		pr_err("meminfo_init() failed!\n");
-	m7_common_init();
+	m7wl_common_init();
 	msm_rotator_set_split_iommu_domain();
 	platform_add_devices(cdp_devices, ARRAY_SIZE(cdp_devices));
 	msm_rotator_update_bus_vectors(1920, 1080);
-	m7_init_fb();
-	m7_init_gpu();
+	m7wl_init_fb();
+	m7wl_init_gpu();
 	platform_add_devices(apq8064_footswitch, apq8064_num_footswitch);
 #ifdef CONFIG_MSM_CAMERA
 #ifdef CONFIG_RAWCHIPII
 	spi_register_board_info(rawchip_spi_board_info, ARRAY_SIZE(rawchip_spi_board_info));
 #endif
-	m7_init_cam();
+	m7wlj_init_cam();
 #endif
 
 #ifdef CONFIG_BT
@@ -4902,11 +4930,11 @@ static void __init m7_cdp_init(void)
 	msm_device_uart_dm6.name = "msm_serial_hs_brcm";
 	msm_device_uart_dm6.dev.platform_data = &msm_uart_dm6_pdata;
 	platform_device_register(&msm_device_uart_dm6);
-	platform_device_register(&m7_rfkill);
+	platform_device_register(&m7wl_rfkill);
 #endif
 
 	if (!(board_mfg_mode() == 6 || board_mfg_mode() == 7))
-		m7_add_usb_devices();
+		m7wl_add_usb_devices();
 }
 
 #define PHY_BASE_ADDR1	0x80600000
@@ -4924,7 +4952,7 @@ extern int parse_tag_memsize(const struct tag *tags);
 unsigned skuid;
 static unsigned int mem_size_mb;
 
-static void __init m7_fixup(struct tag *tags, char **cmdline, struct meminfo *mi)
+static void __init m7wl_fixup(struct tag *tags, char **cmdline, struct meminfo *mi)
 {
 	mem_size_mb = parse_tag_memsize((const struct tag *) tags);
 	printk(KERN_DEBUG "%s: mem_size_mb=%u\n, mfg_mode = %d",
@@ -4952,14 +4980,14 @@ static void __init m7_fixup(struct tag *tags, char **cmdline, struct meminfo *mi
 }
 
 MACHINE_START(M7_UL, "UNKNOWN")
-	.fixup = m7_fixup,
-	.map_io = m7_map_io,
-	.reserve = m7_reserve,
-	.init_irq = m7_init_irq,
+	.fixup = m7wl_fixup,
+	.map_io = m7wl_map_io,
+	.reserve = m7wl_reserve,
+	.init_irq = m7wl_init_irq,
 	.handle_irq = gic_handle_irq,
 	.timer = &msm_timer,
-	.init_machine = m7_cdp_init,
-	.init_early = m7_allocate_memory_regions,
-	.init_very_early = m7_early_reserve,
+	.init_machine = m7wl_cdp_init,
+	.init_early = m7wl_allocate_memory_regions,
+	.init_very_early = m7wl_early_reserve,
 	.restart = msm_restart,
 MACHINE_END

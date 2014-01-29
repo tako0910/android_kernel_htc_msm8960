@@ -847,6 +847,7 @@ static int msm_slim_1_rate_put(struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+/*
 static void m7wl_audio_pmic_mpp_config(void)
 {
 	unsigned ret;
@@ -862,6 +863,7 @@ static void m7wl_audio_pmic_mpp_config(void)
 	if (ret < 0)
 		pr_err("%s:MPP_9 configuration failed\n", __func__);
 }
+*/
 
 static int msm_incall_rec_mode_get(struct snd_kcontrol *kcontrol,
 					struct snd_ctl_elem_value *ucontrol)

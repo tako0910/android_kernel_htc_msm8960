@@ -18,7 +18,7 @@
 #include "../../../../drivers/video/msm/msm_fb.h"
 #include "../../../../drivers/video/msm/mipi_dsi.h"
 
-#include "../board-m7.h"
+#include "../board-m7wlj.h"
 
 #ifdef MDP_GAMMA
 #include "mdp_gamma_jdi.h"

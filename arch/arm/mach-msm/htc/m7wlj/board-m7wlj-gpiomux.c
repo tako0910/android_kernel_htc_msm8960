@@ -209,6 +209,7 @@ static struct gpiomux_setting hsic_wakeup_sus_cfg = {
 	.dir = GPIOMUX_IN,
 };
 
+/*
 static struct gpiomux_setting modem_lte_frame_sync_act_cfg = {
 	.func = GPIOMUX_FUNC_GPIO,
 	.drv = GPIOMUX_DRV_4MA,
@@ -223,6 +224,7 @@ static struct gpiomux_setting modem_lte_frame_sync_sus_cfg = {
 	.pull = GPIOMUX_PULL_NONE,
 	.dir = GPIOMUX_OUT_LOW,
 };
+*/
 
 static struct msm_gpiomux_config m7wlj_hsic_configs[] = {
 	{

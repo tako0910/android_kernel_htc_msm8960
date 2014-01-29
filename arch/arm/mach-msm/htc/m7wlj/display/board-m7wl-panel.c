@@ -25,7 +25,7 @@
 #include <mach/msm_bus_board.h>
 
 #include "devices.h"
-#include "board-m7wlj.h"
+#include "../board-m7wlj.h"
 #include <linux/i2c.h>
 #include <linux/mfd/pm8xxx/pm8921.h>
 #include <mach/debug_display.h>
@@ -201,7 +201,7 @@ static struct msm_panel_common_pdata mdp_pdata = {
 	.mdp_iommu_split_domain = 1,
 };
 
-void __init m7_mdp_writeback(struct memtype_reserve* reserve_table)
+void __init m7wl_mdp_writeback(struct memtype_reserve* reserve_table)
 {
 	mdp_pdata.ov0_wb_size = MSM_FB_OVERLAY0_WRITEBACK_SIZE;
 	mdp_pdata.ov1_wb_size = MSM_FB_OVERLAY1_WRITEBACK_SIZE;
@@ -422,7 +422,7 @@ static int mipi_dsi_panel_power(int on)
 			pr_err("%s: gpio_tlmm_config(%#x)=%d\n", __func__,
 					cfg_panel_te_sleep[0], rc);
 		}
-#endif
+//#endif
 #ifdef CONFIG_MACH_M7_WLJ
 		gpio_set_value_cansleep(bl_en, 0);
 #else
