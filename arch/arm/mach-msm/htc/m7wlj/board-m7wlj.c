@@ -4080,8 +4080,8 @@ static struct bma250_platform_data gsensor_bma250_platform_data = {
 	.axis_map_x = 0,
 	.axis_map_y = 1,
 	.axis_map_z = 2,
-	.negate_x = 0,
-	.negate_y = 1,
+	.negate_x = 1,
+	.negate_y = 0,
 	.negate_z = 1,
 	.power_LPM = m7wl_g_sensor_power_LPM,
 };
