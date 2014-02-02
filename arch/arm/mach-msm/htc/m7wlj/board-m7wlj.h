@@ -158,7 +158,6 @@
 #define EARPHONE_DETz		PMGPIO(20)
 #define LCD_ID0			PMGPIO(21)
 #define SEG_INT			PMGPIO(22)
-#define MAIN_CAM_ID		PMGPIO(22)
 #define BT_WAKE			PMGPIO(23)
 #define AUD_RECEIVER_EN	PMGPIO(24)
 #define SDC3_CD			PMGPIO(25)
@@ -223,7 +222,7 @@ void m7wlj_init_mmc(void);
 void m7wlj_init_gpiomux(void);
 void m7wl_init_pmic(void);
 
-void m7_init_cam(void);
+void m7wlj_init_cam(void);
 
 int m7wl_init_keypad(void);
 int m7wl_wifi_init(void);
@@ -244,7 +243,7 @@ extern struct msm_rtb_platform_data apq8064_rtb_pdata;
 extern struct msm_cache_dump_platform_data apq8064_cache_dump_pdata;
 
 #ifdef CONFIG_RAWCHIPII
-extern struct platform_device m7_msm_rawchip_device;
+extern struct platform_device m7wlj_msm_rawchip_device;
 #endif
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
 int hdmi_enable_5v(int on);
