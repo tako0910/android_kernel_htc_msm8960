@@ -93,8 +93,10 @@
 #include <linux/bma250.h>
 #include <linux/cm3629.h>
 #include <linux/htc_flashlight.h>
+#include <mach/ADP5585_ioextender.h>
 #include <linux/leds.h>
-#include <linux/leds-pm8xxx-htc.h>
+#include <linux/leds-lp5521_htc.h>
+#include <linux/leds-pm8921.h>
 #include <linux/mfd/pm8xxx/pm8xxx-vibrator-pwm.h>
 #include <linux/pn544.h>
 #ifdef CONFIG_SERIAL_CIR
@@ -182,6 +184,8 @@ struct pm8xxx_gpio_init {
 #include <linux/platform_device.h>
 #include <linux/felica_cxd2235.h>
 #endif
+
+#define MSM8064_GSBI2_QUP_I2C_BUS_ID 2
 
 #ifdef CONFIG_KERNEL_MSM_CONTIG_MEM_REGION
 static unsigned msm_contig_mem_size = MSM_CONTIG_MEM_SIZE;
@@ -4388,6 +4392,155 @@ static struct i2c_board_info i2c_CM36282_devices_r8[] = {
 	},
 };
 
+static void gsbi2_ioext_reset_chip(void)
+{
+	uint8_t rdara[4];
+	uint8_t wdata[4]={0};
+
+	printk(KERN_INFO "[IOEXT] %s START\n", __func__);
+
+	gpio_set_value(IO_EXT_RSTz, 1);
+	msleep(10);
+	gpio_set_value(IO_EXT_RSTz, 0);
+	msleep(10);
+	gpio_set_value(IO_EXT_RSTz, 1);
+
+	msleep(100);
+
+
+	ioext_i2c_read(0x00, rdara, 1);
+	printk(KERN_INFO "[IOEXT] %s [R] ChipID(0x00) = 0x%x\n", __func__, rdara[0]);
+
+
+
+	wdata[0] = 0x00;
+	wdata[1] = 0x00;
+	ioext_i2c_write(IOEXTENDER_I2C_GPIO_USAGE, wdata, 2);
+	printk(KERN_INFO "[IOEXT] %s [W] PIN_CONFIG (0x38~0x39) Reg\n", __func__);
+
+
+	wdata[0] = 0xff;
+	wdata[1] = 0x03;
+	wdata[2] = 0x57;
+	wdata[3] = 0x01;
+	ioext_i2c_write(IOEXTENDER_I2C_RPULL_CONFIG, wdata, 4);
+	printk(KERN_INFO "[IOEXT] %s [W] RPULL_CONFIG_A (0x17~0x20) Reg\n", __func__);
+
+
+	wdata[0] = 0x0f; 
+	wdata[1] = 0x00;
+	ioext_i2c_write(IOEXTENDER_I2C_GPIO_DIRECTION, wdata, 2);
+	printk(KERN_INFO "[IOEXT] %s [W] GPIO_DIRECTION (0x27~0x28) Reg\n", __func__);
+
+
+	wdata[0] = 0x00;
+	wdata[1] = 0x00;
+	ioext_i2c_write(IOEXTENDER_I2C_GPO_OUT_MODE, wdata, 2);
+	printk(KERN_INFO "[IOEXT] %s [W] GPO_OUT_MODE (0x25~0x26) Reg\n", __func__);
+
+
+	wdata[0] = 0x05; 
+	wdata[1] = 0x00;
+	ioext_i2c_write(IOEXTENDER_I2C_GPO_DATA_OUT, wdata, 2);
+	printk(KERN_INFO "[IOEXT] %s [W] GPO_DATA_OUT (0x23~0x24) Reg\n", __func__);
+
+
+	printk(KERN_INFO "[IOEXT] %s END\n", __func__);
+
+	return;
+}
+
+/*
+static void gsbi3_ioext_reset_chip(void)
+{
+	uint8_t rdara[4];
+	uint8_t wdata[4]={0};
+
+	printk(KERN_INFO "[IOEXT] %s START\n", __func__);
+
+	gpio_set_value(IO_EXT_RSTz, 1);
+	msleep(10);
+	gpio_set_value(IO_EXT_RSTz, 0);
+	msleep(10);
+	gpio_set_value(IO_EXT_RSTz, 1);
+
+	msleep(100);
+
+
+	ioext_i2c_read(0x00, rdara, 1);
+	printk(KERN_INFO "[IOEXT] %s [R] ChipID(0x00) = 0x%x\n", __func__, rdara[0]);
+
+
+
+	wdata[0] = 0x00;
+	wdata[1] = 0x00;
+	ioext_i2c_write(IOEXTENDER_I2C_GPIO_USAGE, wdata, 2);
+	printk(KERN_INFO "[IOEXT] %s [W] PIN_CONFIG (0x38~0x39) Reg\n", __func__);
+
+
+	wdata[0] = 0x7f;
+	wdata[1] = 0x01;
+	wdata[2] = 0x75;
+	wdata[3] = 0x03;
+	ioext_i2c_write(IOEXTENDER_I2C_RPULL_CONFIG, wdata, 4);
+	printk(KERN_INFO "[IOEXT] %s [W] RPULL_CONFIG_A (0x17~0x20) Reg\n", __func__);
+
+
+	wdata[0] = 0x07; 
+	wdata[1] = 0x14; 
+	ioext_i2c_write(IOEXTENDER_I2C_GPIO_DIRECTION, wdata, 2);
+	printk(KERN_INFO "[IOEXT] %s [W] GPIO_DIRECTION (0x27~0x28) Reg\n", __func__);
+
+
+	wdata[0] = 0x00;
+	wdata[1] = 0x00;
+	ioext_i2c_write(IOEXTENDER_I2C_GPO_OUT_MODE, wdata, 2);
+	printk(KERN_INFO "[IOEXT] %s [W] GPO_OUT_MODE (0x25~0x26) Reg\n", __func__);
+
+
+	wdata[0] = 0x00;
+	wdata[1] = 0x14; 
+	ioext_i2c_write(IOEXTENDER_I2C_GPO_DATA_OUT, wdata, 2);
+	printk(KERN_INFO "[IOEXT] %s [W] GPO_DATA_OUT (0x23~0x24) Reg\n", __func__);
+
+
+	printk(KERN_INFO "[IOEXT] %s END\n", __func__);
+
+	return;
+}
+*/
+
+static struct platform_device ioext_devices[] = {
+};
+
+static struct ioext_i2c_platform_data gsbi2_ioext_data = {
+	.num_devices = ARRAY_SIZE(ioext_devices),
+	.ioext_devices = ioext_devices,
+	.reset_chip = gsbi2_ioext_reset_chip,
+};
+
+static struct i2c_board_info gsbi2_ioext_devices[] = {
+	{
+		I2C_BOARD_INFO(IOEXTENDER_I2C_NAME, 0x68 >> 1),
+		.platform_data = &gsbi2_ioext_data,
+	},
+};
+
+/*
+static struct ioext_i2c_platform_data gsbi3_ioext_data = {
+	.num_devices = ARRAY_SIZE(ioext_devices),
+	.ioext_devices = ioext_devices,
+	.reset_chip = gsbi3_ioext_reset_chip,
+};
+
+static struct i2c_board_info gsbi3_ioext_devices[] = {
+	{
+		I2C_BOARD_INFO(IOEXTENDER_I2C_NAME, 0x68 >> 1),
+		.platform_data = &gsbi3_ioext_data,
+	},
+};
+*/
+
 #define TFA9887_I2C_SLAVE_ADDR	(0x68 >> 1)
 #define TFA9887L_I2C_SLAVE_ADDR	(0x6A >> 1)
 static struct i2c_board_info msm_i2c_gsbi1_tfa9887_info[] = {
@@ -4420,6 +4573,24 @@ static struct i2c_board_info msm_i2c_gsbi1_rt5501_info[] = {
 static struct i2c_board_info pwm_i2c_devices[] = {
 	{
 		I2C_BOARD_INFO("pwm_i2c", 0x6C >> 1),
+	},
+};
+
+static struct led_i2c_config lp5521_led_config[] = {
+	{
+		.name = "indicator",
+	},
+};
+static struct led_i2c_platform_data led_data = {
+	.num_leds	= ARRAY_SIZE(lp5521_led_config),
+	.led_config	= lp5521_led_config,
+	.ena_gpio_io_ext = IOEXT_GPIO_2,
+};
+static struct i2c_board_info i2c_led_devices[] = {
+	{
+		I2C_BOARD_INFO(LED_I2C_NAME, 0x32),
+		.platform_data = &led_data,
+		.irq = -1,
 	},
 };
 
@@ -4906,6 +5077,18 @@ static struct i2c_registry m7wl_i2c_devices[] __initdata = {
 	},
 #endif
 #endif
+	{
+	    I2C_SURF | I2C_FFA ,
+	    MSM8064_GSBI2_QUP_I2C_BUS_ID,
+	    gsbi2_ioext_devices,
+	    ARRAY_SIZE(gsbi2_ioext_devices),
+	},
+	{
+		I2C_SURF | I2C_FFA,
+		MSM8064_GSBI2_QUP_I2C_BUS_ID,
+		i2c_led_devices,
+		ARRAY_SIZE(i2c_led_devices),
+	},
 };
 
 extern int gy_type;
@@ -4956,6 +5139,13 @@ static void __init register_i2c_devices(void)
 				i2c_CM36282_devices_r8,
 				ARRAY_SIZE(i2c_CM36282_devices_r8));
 	}
+/*
+	if (system_rev == XA) {
+		i2c_register_board_info(MSM8064_GSBI3_QUP_I2C_BUS_ID,
+				gsbi3_ioext_devices,
+				ARRAY_SIZE(gsbi3_ioext_devices));
+	}
+*/
 }
 
 static void __init apq8064ab_update_retention_spm(void)
