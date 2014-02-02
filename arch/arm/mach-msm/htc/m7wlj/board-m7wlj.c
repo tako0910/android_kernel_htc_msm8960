@@ -3784,7 +3784,7 @@ static struct platform_device *common_devices[] __initdata = {
 #endif
 #ifdef CONFIG_MSM_CAMERA
 #ifdef CONFIG_RAWCHIPII
-	&m7wlj_msm_rawchip_device,
+	&m7_msm_rawchip_device,
 #endif
 #endif
 };
@@ -5281,7 +5281,7 @@ static void __init m7wl_cdp_init(void)
 #ifdef CONFIG_RAWCHIPII
 	spi_register_board_info(rawchip_spi_board_info, ARRAY_SIZE(rawchip_spi_board_info));
 #endif
-	m7wlj_init_cam();
+	m7_init_cam();
 #endif
 
 #ifdef CONFIG_BT
