@@ -4991,3 +4991,16 @@ MACHINE_START(M7_UL, "UNKNOWN")
 	.init_very_early = m7wl_early_reserve,
 	.restart = msm_restart,
 MACHINE_END
+
+MACHINE_START(M7_WLJ, "UNKNOWN")
+	.fixup = m7wl_fixup,
+	.map_io = m7wl_map_io,
+	.reserve = m7wl_reserve,
+	.init_irq = m7wl_init_irq,
+	.handle_irq = gic_handle_irq,
+	.timer = &msm_timer,
+	.init_machine = m7wl_cdp_init,
+	.init_early = m7wl_allocate_memory_regions,
+	.init_very_early = m7wl_early_reserve,
+	.restart = msm_restart,
+MACHINE_END
