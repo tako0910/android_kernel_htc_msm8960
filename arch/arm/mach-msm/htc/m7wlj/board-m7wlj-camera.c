@@ -92,134 +92,134 @@ static void m7_yushanii_probed(enum htc_camera_image_type_board htc_image);
 #ifdef CONFIG_MSM_CAMERA
 static struct gpiomux_setting cam_settings[] = {
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_8MA,
 		.pull = GPIOMUX_PULL_DOWN,
 		.dir = GPIOMUX_IN,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_1,
+		.func = GPIOMUX_FUNC_1, 
 		.drv = GPIOMUX_DRV_8MA,
 		.pull = GPIOMUX_PULL_NONE,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_8MA,
 		.pull = GPIOMUX_PULL_NONE,
 		.dir = GPIOMUX_OUT_LOW,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_1,
+		.func = GPIOMUX_FUNC_1, 
 		.drv = GPIOMUX_DRV_8MA,
 		.pull = GPIOMUX_PULL_NONE,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_2,
+		.func = GPIOMUX_FUNC_2, 
 		.drv = GPIOMUX_DRV_8MA,
 		.pull = GPIOMUX_PULL_NONE,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_4MA,
 		.pull = GPIOMUX_PULL_DOWN,
 		.dir = GPIOMUX_IN,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_2,
+		.func = GPIOMUX_FUNC_2, 
 		.drv = GPIOMUX_DRV_2MA,
 		.pull = GPIOMUX_PULL_NONE,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_2MA,
 		.pull = GPIOMUX_PULL_NONE,
 		.dir = GPIOMUX_IN,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_2MA,
 		.pull = GPIOMUX_PULL_DOWN,
 		.dir = GPIOMUX_IN,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_2MA,
 		.pull = GPIOMUX_PULL_NONE,
 		.dir = GPIOMUX_OUT_HIGH,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_2MA,
 		.pull = GPIOMUX_PULL_NONE,
 		.dir = GPIOMUX_OUT_LOW,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_1,
+		.func = GPIOMUX_FUNC_1, 
 		.drv = GPIOMUX_DRV_8MA,
 		.pull = GPIOMUX_PULL_DOWN,
 		.dir = GPIOMUX_IN,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_4MA,
 		.pull = GPIOMUX_PULL_NONE,
 		.dir = GPIOMUX_OUT_LOW,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_4MA,
 		.pull = GPIOMUX_PULL_NONE,
 		.dir = GPIOMUX_OUT_HIGH,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_6MA,
 		.pull = GPIOMUX_PULL_NONE,
 		.dir = GPIOMUX_OUT_LOW,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_6MA,
 		.pull = GPIOMUX_PULL_NONE,
 		.dir = GPIOMUX_OUT_HIGH,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_1,
+		.func = GPIOMUX_FUNC_1, 
 		.drv = GPIOMUX_DRV_6MA,
 		.pull = GPIOMUX_PULL_DOWN,
 		.dir = GPIOMUX_IN,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_1,
+		.func = GPIOMUX_FUNC_1, 
 		.drv = GPIOMUX_DRV_6MA,
 		.pull = GPIOMUX_PULL_NONE,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_2,
+		.func = GPIOMUX_FUNC_2, 
 		.drv = GPIOMUX_DRV_6MA,
 		.pull = GPIOMUX_PULL_NONE,
 	},
 
 	{
-		.func = GPIOMUX_FUNC_GPIO,
+		.func = GPIOMUX_FUNC_GPIO, 
 		.drv = GPIOMUX_DRV_6MA,
 		.pull = GPIOMUX_PULL_DOWN,
 		.dir = GPIOMUX_IN,
@@ -230,64 +230,65 @@ static struct msm_gpiomux_config m7_cam_common_configs[] = {
 	{
 		.gpio = CAM_PIN_GPIO_CAM_MCLK0,
 		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[17],
-			[GPIOMUX_SUSPENDED] = &cam_settings[14],
+			[GPIOMUX_ACTIVE]    = &cam_settings[17], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[14], 
 		},
 	},
 	{
 		.gpio = CAM_PIN_GPIO_CAM_I2C_DAT,
 		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[17],
-			[GPIOMUX_SUSPENDED] = &cam_settings[16],
+			[GPIOMUX_ACTIVE]    = &cam_settings[17], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[19],
 		},
 	},
 	{
 		.gpio = CAM_PIN_GPIO_CAM_I2C_CLK,
 		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[17],
-			[GPIOMUX_SUSPENDED] = &cam_settings[16],
+			[GPIOMUX_ACTIVE]    = &cam_settings[17], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[19],
 		},
 	},
 	{
 		.gpio = CAM_PIN_GPIO_RAW_INTR0,
 		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[7],
-			[GPIOMUX_SUSPENDED] = &cam_settings[8],
+			[GPIOMUX_ACTIVE]    = &cam_settings[7], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[8], 
 		},
 	},
 	{
 		.gpio = CAM_PIN_GPIO_RAW_INTR1,
 		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[7],
-			[GPIOMUX_SUSPENDED] = &cam_settings[8],
+			[GPIOMUX_ACTIVE]    = &cam_settings[7], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[8], 
+		},
+	},
+
+	{
+		.gpio      = CAM_PIN_GPIO_MCAM_SPI_CLK,
+		.settings = {
+			[GPIOMUX_ACTIVE] = &cam_settings[18], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[19], 
 		},
 	},
 	{
-		.gpio = CAM_PIN_GPIO_MCAM_SPI_CLK,
+		.gpio      = CAM_PIN_GPIO_MCAM_SPI_CS0,
 		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[18],
-			[GPIOMUX_SUSPENDED] = &cam_settings[14],
+			[GPIOMUX_ACTIVE] = &cam_settings[18], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[19], 
 		},
 	},
 	{
-		.gpio = CAM_PIN_GPIO_MCAM_SPI_CS0,
+		.gpio      = CAM_PIN_GPIO_MCAM_SPI_DI,
 		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[18],
-			[GPIOMUX_SUSPENDED] = &cam_settings[14],
+			[GPIOMUX_ACTIVE] = &cam_settings[18], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[19], 
 		},
 	},
 	{
-		.gpio = CAM_PIN_GPIO_MCAM_SPI_DI,
+		.gpio      = CAM_PIN_GPIO_MCAM_SPI_DO,
 		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[18],
-			[GPIOMUX_SUSPENDED] = &cam_settings[19],
-		},
-	},
-	{
-		.gpio = CAM_PIN_GPIO_MCAM_SPI_DO,
-		.settings = {
-			[GPIOMUX_ACTIVE]    = &cam_settings[18],
-			[GPIOMUX_SUSPENDED] = &cam_settings[14],
+			[GPIOMUX_ACTIVE] = &cam_settings[18], 
+			[GPIOMUX_SUSPENDED] = &cam_settings[19], 
 		},
 	},
 };
@@ -3045,7 +3046,8 @@ struct i2c_board_info m7_camera_i2c_boardinfo_ov4688_0x20_ov2722[] = {
 
 void __init m7_init_cam(void)
 {
-	int main_camera_id = CAMERA_SENSOR_ID_SONY_13M;
+//	int main_camera_id = CAMERA_SENSOR_ID_SONY_13M;
+	int main_camera_id = CAMERA_SENSOR_ID_ST_4M;
 	pr_info("%s", __func__);
 #ifdef CONFIG_MSM_CAMERA
 	msm_gpiomux_install(m7_cam_common_configs,
