@@ -232,9 +232,9 @@ int m7wl_wifi_init(void);
 #define APQ_8064_GSBI3_QUP_I2C_BUS_ID 3
 #define APQ_8064_GSBI4_QUP_I2C_BUS_ID 4
 
-void m7wl_init_fb(void);
-void m7wl_allocate_fb_region(void);
-void m7wl_mdp_writeback(struct memtype_reserve *reserve_table);
+void m7_init_fb(void);
+void m7_allocate_fb_region(void);
+void m7_mdp_writeback(struct memtype_reserve *reserve_table);
 
 void m7wl_init_gpu(void);
 void m7wl_pm8xxx_gpio_mpp_init(void);

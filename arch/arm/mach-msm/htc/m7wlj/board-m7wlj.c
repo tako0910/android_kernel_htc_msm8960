@@ -719,7 +719,7 @@ static void __init reserve_ion_memory(void)
 
 static void __init reserve_mdp_memory(void)
 {
-	m7wl_mdp_writeback(apq8064_reserve_table);
+	m7_mdp_writeback(apq8064_reserve_table);
 }
 
 static void __init reserve_cache_dump_memory(void)
@@ -5073,7 +5073,7 @@ static void __init m7wl_common_init(void)
 
 static void __init m7wl_allocate_memory_regions(void)
 {
-	m7wl_allocate_fb_region();
+	m7_allocate_fb_region();
 }
 
 static void __init m7wl_cdp_init(void)
@@ -5084,7 +5084,7 @@ static void __init m7wl_cdp_init(void)
 	msm_rotator_set_split_iommu_domain();
 	platform_add_devices(cdp_devices, ARRAY_SIZE(cdp_devices));
 	msm_rotator_update_bus_vectors(1920, 1080);
-	m7wl_init_fb();
+	m7_init_fb();
 	m7wl_init_gpu();
 	platform_add_devices(apq8064_footswitch, apq8064_num_footswitch);
 #ifdef CONFIG_MSM_CAMERA
