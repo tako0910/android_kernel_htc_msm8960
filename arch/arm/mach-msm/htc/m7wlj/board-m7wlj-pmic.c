@@ -406,12 +406,17 @@ static const struct pm8xxx_adc_map_pt m7wls_adcmap_btm_table[] = {
 	{790,	308}
 };
 
+static struct pm8xxx_adc_map_table pm8xxx_adcmap_btm_table = {
+	.table = m7wls_adcmap_btm_table,
+	.size = ARRAY_SIZE(m7wls_adcmap_btm_table),
+};
 
 static struct pm8xxx_adc_platform_data m7wl_pm8921_adc_pdata = {
 	.adc_channel		= m7wl_pm8921_adc_channels_data,
 	.adc_num_board_channel	= ARRAY_SIZE(m7wl_pm8921_adc_channels_data),
 	.adc_prop		= &m7wl_pm8921_adc_data,
 	.adc_mpp_base		= PM8921_MPP_PM_TO_SYS(1),
+	.adc_map_btm_table	= &pm8xxx_adcmap_btm_table,
 	.pm8xxx_adc_device_register	= m7wl_pm8xxx_adc_device_register,
 };
 
@@ -490,17 +495,20 @@ pm8921_chg_pdata __devinitdata = {
 	.max_voltage		= MAX_VOLTAGE_MV,
 	.min_voltage		= 3200,
 	.resume_voltage_delta	= 50,
-	.term_current		= 75,
+	.term_current		= 230,
 	.cool_temp		= 0,
 	.warm_temp		= 48,
 	.temp_check_period	= 1,
-	.max_bat_chg_current	= 1025,
+	.max_bat_chg_current	= 1525,
 	.cool_bat_chg_current	= 1025,
 	.warm_bat_chg_current	= 1025,
 	.cool_bat_voltage	= 4200,
 	.warm_bat_voltage	= 4000,
 	.mbat_in_gpio		= 0, 
 	.is_embeded_batt	= 1,
+	.eoc_ibat_thre_ma	= 50,
+	.ichg_threshold_ua = -1200000,
+	.ichg_regulation_thr_ua 	= -375000,
 	.thermal_mitigation	= m7wl_pm8921_therm_mitigation,
 	.thermal_levels		= ARRAY_SIZE(m7wl_pm8921_therm_mitigation),
 	.cold_thr = PM_SMBC_BATT_TEMP_COLD_THR__HIGH,
@@ -511,13 +519,13 @@ pm8921_chg_pdata __devinitdata = {
 
 static struct pm8xxx_ccadc_platform_data
 m7wl_pm8xxx_ccadc_pdata = {
-	.r_sense_uohm		= 10000,
+	.r_sense		= 10,
 	.calib_delay_ms		= 600000,
 };
 
 static struct pm8921_bms_platform_data
 pm8921_bms_pdata __devinitdata = {
-	.r_sense		= 10000,
+	.r_sense		= 10,
 	.i_test			= 2000,
 	.v_failure		= 3000,
 	.max_voltage_uv		= MAX_VOLTAGE_MV * 1000,
@@ -546,7 +554,8 @@ __setup("androidboot.dq=", check_dq_setup);
 static struct pm8xxx_vibrator_platform_data pm8xxx_vib_pdata = {
 	.initial_vibrate_ms = 0,
 	.max_timeout_ms = 15000,
-	.level_mV = 3000,
+	.level_mV = 2700,
+	.threshold = 500,
 	};
 
 static struct pm8921_platform_data
