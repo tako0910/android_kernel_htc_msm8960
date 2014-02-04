@@ -113,6 +113,11 @@
 #include <mach/htc_battery_8960.h>
 #include <mach/htc_battery_cell.h>
 #endif
+
+#ifdef CONFIG_SMB349_CHARGER
+#include "linux/i2c/smb349.h"
+#endif
+
 #include <mach/board_htc.h>
 #include <mach/htc_headset_mgr.h>
 #include <mach/htc_headset_pmic.h>
@@ -276,6 +281,35 @@ static struct platform_device battery_bcl_device = {
 
 struct fmem_platform_data apq8064_fmem_pdata = {
 };
+
+#ifdef CONFIG_SMB349_CHARGER
+static struct smb349_platform_data smb349_data = {
+        .chg_susp_gpio = 7,
+        .chg_current_ma = 0,
+        .chg_stat_gpio = PM8921_GPIO_IRQ(PM8921_IRQ_BASE, CHARGER_STAT),
+};
+
+#ifdef CONFIG_SUPPORT_DQ_BATTERY
+static int __init check_dq_setup(char *str)
+{
+        if (!strcmp(str, "PASS"))
+                smb349_data.dq_result = 1;
+        else
+                smb349_data.dq_result = 0;
+
+        return 1;
+}
+__setup("androidboot.dq=", check_dq_setup);
+#endif
+
+static struct i2c_board_info msm_smb_349_boardinfo[] __initdata = {
+        {
+                I2C_BOARD_INFO("smb349", 0xD4 >> 1),
+                .platform_data = &smb349_data,
+        },
+};
+
+#endif
 
 static struct memtype_reserve apq8064_reserve_table[] __initdata = {
 	[MEMTYPE_SMI] = {
@@ -5041,6 +5075,14 @@ static struct i2c_registry m7wl_i2c_devices[] __initdata = {
 		msm_i2c_gsbi3_synaptics_info,
 		ARRAY_SIZE(msm_i2c_gsbi3_synaptics_info),
 	},
+#ifdef CONFIG_SMB349_CHARGER
+       {
+               I2C_SURF | I2C_FFA,
+               APQ_8064_GSBI1_QUP_I2C_BUS_ID,
+               msm_smb_349_boardinfo,
+               ARRAY_SIZE(msm_smb_349_boardinfo),
+       },
+#endif
 	{
 		I2C_SURF | I2C_FFA,
 		APQ_8064_GSBI1_QUP_I2C_BUS_ID,
@@ -5167,6 +5209,49 @@ static void __init apq8064ab_update_retention_spm(void)
 	}
 }
 
+#ifdef CONFIG_SMB349_CHARGER
+static struct pm8xxx_gpio_init smb349_pmic_gpio[] = {
+                PM8XXX_GPIO_INIT(CHARGER_STAT, PM_GPIO_DIR_IN,
+                         PM_GPIO_OUT_BUF_CMOS, 0, PM_GPIO_PULL_UP_1P5,
+                         PM_GPIO_VIN_S4, PM_GPIO_STRENGTH_LOW,
+                         PM_GPIO_FUNC_NORMAL, 0, 0),
+};
+
+
+static  struct pm8xxx_mpp_config_data smb349_susp = {
+                .type           = PM8XXX_MPP_TYPE_D_OUTPUT,
+                .level          = PM8921_MPP_DIG_LEVEL_S4,
+};
+
+int smb349_mpp_init(int mpp)
+{
+        int ret = 0;
+
+        pr_info("[%s]\n", __func__);
+
+
+        smb349_susp.control = PM8XXX_MPP_DOUT_CTRL_HIGH;
+        ret = pm8xxx_mpp_config(PM8921_MPP_PM_TO_SYS(mpp), &smb349_susp);
+        if (ret < 0)
+                pr_err("%s: SUSP configuration failed\n", __func__);
+
+
+
+        ret  = pm8xxx_gpio_config(smb349_pmic_gpio[0].gpio, &smb349_pmic_gpio[0].config);
+        if (ret < 0)
+                pr_err("[USB BOARD] %s: Config ERROR: GPIO=%u, rc=%d\n", __func__, smb349_pmic_gpio[0].gpio, ret);
+
+        return ret;
+}
+
+
+static void __init m7wlj_smb349_mpp_init(void)
+{
+
+        smb349_mpp_init(smb349_data.chg_susp_gpio);
+}
+#endif
+
 extern void (*cam_vcm_on_cb)(void);
 extern void (*cam_vcm_off_cb)(void);
 
@@ -5216,6 +5301,15 @@ static void __init m7wl_common_init(void)
 		for (rc = 0; rc < ARRAY_SIZE(syn_ts_3k_data); rc++)
 			syn_ts_3k_data[rc].mfg_flag = 1;
 	}
+	
+#ifdef CONFIG_SMB349_CHARGER
+
+        smb349_data.chip_rev = SMB_340;
+
+        smb349_data.aicl_result_threshold = AICL_RESULT_1600MA;
+        smb349_data.dc_input_max = DC_INPUT_1700MA;
+        smb349_data.aicl_on = AICL_ENABLE;
+#endif
 
 	register_i2c_devices();
 
@@ -5244,6 +5338,10 @@ static void __init m7wl_common_init(void)
 	m7wl_pm8xxx_gpio_mpp_init();
 	m7wlj_init_mmc();
 	m7wl_wifi_init();
+
+#ifdef CONFIG_SMB349_CHARGER
+        m7wlj_smb349_mpp_init();
+#endif
 
 	pr_info("%s: Add MDM2 device\n", __func__);
 	mdm_m7wl_device.dev.platform_data = &mdm_platform_data;
