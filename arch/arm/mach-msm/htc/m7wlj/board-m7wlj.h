@@ -221,6 +221,7 @@ int __init apq8064_add_sdcc(unsigned int controller,
 void m7wlj_init_mmc(void);
 void m7wlj_init_gpiomux(void);
 void m7wl_init_pmic(void);
+void m7wlj_init_pmic_register_cam_cb(void *cam_vcm_on_cb, void *cam_vcm_off_cb);
 
 void m7wlj_init_cam(void);
 

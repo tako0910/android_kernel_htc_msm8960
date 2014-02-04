@@ -5165,6 +5165,9 @@ static void __init apq8064ab_update_retention_spm(void)
 	}
 }
 
+extern void (*cam_vcm_on_cb)(void);
+extern void (*cam_vcm_off_cb)(void);
+
 static void __init m7wl_common_init(void)
 {
 	int rc = 0;
@@ -5216,6 +5219,8 @@ static void __init m7wl_common_init(void)
 	apq8064_device_qup_spi_gsbi5.dev.platform_data =
 						&apq8064_qup_spi_gsbi5_pdata;
 	m7wl_init_pmic();
+
+	m7wlj_init_pmic_register_cam_cb(&cam_vcm_on_cb, &cam_vcm_off_cb);
 
 	android_usb_pdata.swfi_latency =
 		msm_rpmrs_levels[0].latency_us;

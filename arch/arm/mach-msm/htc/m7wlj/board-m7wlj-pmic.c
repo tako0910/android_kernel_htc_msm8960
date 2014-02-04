@@ -494,3 +494,11 @@ void __init m7wl_init_pmic(void)
 					m7wl_pm8921_regulator_pdata_len;
 
 }
+
+void __init m7wlj_init_pmic_register_cam_cb(void *cam_vcm_on_cb, void *cam_vcm_off_cb)
+{
+	if (cam_vcm_on_cb)
+		pm8xxx_vib_pdata.camera_cb = cam_vcm_on_cb;
+	if (cam_vcm_off_cb)
+		pm8xxx_vib_pdata.camera_off_cb = cam_vcm_off_cb;
+}
