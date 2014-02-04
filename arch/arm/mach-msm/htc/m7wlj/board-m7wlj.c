@@ -5205,7 +5205,8 @@ static void __init m7wl_common_init(void)
 	platform_device_register(&m7wl_device_rpm_regulator);
 	if (msm_xo_init())
 		pr_err("Failed to initialize XO votes\n");
-	msm_clock_init(&apq8064_clock_init_data);
+	clk_ignor_list_add("msm_sdcc.3", "core_clk", &apq8064_clock_init_data_r2);
+	msm_clock_init(&apq8064_clock_init_data_r2);
 	m7wlj_init_gpiomux();
 	m7wl_i2c_init();
 
