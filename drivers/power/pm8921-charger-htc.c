@@ -17,8 +17,8 @@
 #include <linux/moduleparam.h>
 #include <linux/platform_device.h>
 #include <linux/errno.h>
-#include <linux/mfd/pm8xxx/pm8921-charger-htc.h>
-#include <linux/mfd/pm8xxx/pm8921-bms-htc.h>
+#include <linux/mfd/pm8xxx/pm8921-charger.h>
+#include <linux/mfd/pm8xxx/pm8921-bms.h>
 #include <linux/mfd/pm8xxx/pm8xxx-adc.h>
 #include <linux/mfd/pm8xxx/mpp.h>
 #include <linux/mfd/pm8xxx/ccadc.h>
@@ -5981,11 +5981,8 @@ static int __devinit pm8921_chg_hw_init(struct pm8921_chg_chip *chip)
 	u8 subrev;
 
 	if (pm8xxx_get_version(chip->dev->parent) == PM8XXX_VERSION_8921) {
-#if defined(CONFIG_MACH_M7_UL) || defined(CONFIG_MACH_M7_WLJ)
+		
 		chip->lockup_lpm_wrkarnd = true;
-#else
-		chip->lockup_lpm_wrkarnd = false;
-#endif
 	}
 
 	if (chip->lockup_lpm_wrkarnd) {
