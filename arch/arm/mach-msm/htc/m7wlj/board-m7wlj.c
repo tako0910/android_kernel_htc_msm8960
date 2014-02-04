@@ -2939,6 +2939,7 @@ static struct platform_device m7wl_device_ext_5v_vreg __devinitdata = {
 	},
 };
 
+/*
 static struct platform_device m7wl_device_ext_mpp8_vreg __devinitdata = {
 	.name	= GPIO_REGULATOR_DEV_NAME,
 	.id	= PM8921_MPP_PM_TO_SYS(8),
@@ -2947,6 +2948,7 @@ static struct platform_device m7wl_device_ext_mpp8_vreg __devinitdata = {
 			= &m7wl_gpio_regulator_pdata[GPIO_VREG_ID_EXT_MPP8],
 	},
 };
+*/
 
 static struct platform_device m7wl_device_ext_ts_sw_vreg __devinitdata = {
 	.name	= GPIO_REGULATOR_DEV_NAME,
@@ -3664,7 +3666,7 @@ static struct platform_device *common_devices[] __initdata = {
 	&msm_device_uart_dm4,
 #endif
 	&m7wl_device_ext_5v_vreg,
-	&m7wl_device_ext_mpp8_vreg,
+//	&m7wl_device_ext_mpp8_vreg,
 	&m7wl_device_ext_ts_sw_vreg,
 	&apq8064_device_ssbi_pmic1,
 	&apq8064_device_ssbi_pmic2,
