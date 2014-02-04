@@ -63,6 +63,11 @@
 #include <mach/msm_dsps.h>
 #endif
 
+#define DMOV_HSUART_GSBI4_TX_CHAN       11
+#define DMOV_HSUART_GSBI4_TX_CRCI       8
+
+#define DMOV_HSUART_GSBI4_RX_CHAN       10
+#define DMOV_HSUART_GSBI4_RX_CRCI       7
 
 /* Address of GSBI blocks */
 #define MSM_GSBI1_PHYS		0x16000000
