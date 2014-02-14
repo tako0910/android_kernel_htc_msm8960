@@ -3340,9 +3340,6 @@ int __init m7wl_j_init_felica(void)
 #endif
 
 #ifdef CONFIG_HTC_BATT_8960
-#ifdef CONFIG_HTC_PNPMGR
-extern int pnpmgr_battery_charging_enabled(int charging_enabled);
-#endif 
 static int critical_alarm_voltage_mv[] = {3000, 3100, 3200, 3400};
 
 static struct htc_battery_platform_data htc_battery_pdev_data = {
@@ -3356,9 +3353,7 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.overload_vol_thr_mv = 4000,
 	.overload_curr_thr_ma = 0,
 	.smooth_chg_full_delay_min = 1,
-
 	.icharger.name = "pm8921",
-	.icharger.sw_safetytimer = 0,
 	.icharger.set_limit_charge_enable = pm8921_limit_charge_enable,
 	.icharger.get_attr_text = pm8921_charger_get_attr_text,
 	.icharger.max_input_current = pm8921_set_hsml_target_ma,
@@ -3378,10 +3373,8 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.icharger.is_safty_timer_timeout = pm8921_is_chg_safety_timer_timeout,
 	.icharger.is_battery_full_eoc_stop = pm8921_is_batt_full_eoc_stop,
 
-
 	.igauge.name = "pm8921",
 	.igauge.get_battery_voltage = pm8921_get_batt_voltage,
-	.igauge.set_chg_ovp = pm8921_set_chg_ovp,
 	.igauge.get_battery_current = pm8921_bms_get_batt_current,
 	.igauge.get_battery_temperature = pm8921_get_batt_temperature,
 	.igauge.get_battery_id = pm8921_get_batt_id,
@@ -3395,10 +3388,6 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.igauge.enable_lower_voltage_alarm = pm8xxx_batt_lower_alarm_enable,
 	.igauge.set_lower_voltage_alarm_threshold =
 						pm8xxx_batt_lower_alarm_threshold_set,
-	
-#ifdef CONFIG_HTC_PNPMGR
-	.notify_pnpmgr_charging_enabled = pnpmgr_battery_charging_enabled,
-#endif 
 };
 
 static struct platform_device htc_battery_pdev = {
