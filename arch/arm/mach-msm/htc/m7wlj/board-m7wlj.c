@@ -1261,6 +1261,7 @@ static struct slim_device apq8064_slim_tabla20 = {
 	},
 };
 
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_3K
 static struct synaptics_virtual_key m7wl_vk_data[] = {
 	{
 		.index = 1,
@@ -2166,6 +2167,7 @@ static struct attribute *syn_properties_attrs[] = {
 static struct attribute_group syn_properties_attr_group = {
 	.attrs = syn_properties_attrs,
 };
+#endif
 
 #define MSM_WCNSS_PHYS	0x03000000
 #define MSM_WCNSS_SIZE	0x280000
@@ -5035,12 +5037,14 @@ static void __init m7wlj_receiver_init(void)
 }
 */
 static struct i2c_registry m7wl_i2c_devices[] __initdata = {
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_3K
 	{
 		I2C_SURF | I2C_FFA,
 		APQ_8064_GSBI3_QUP_I2C_BUS_ID,
 		msm_i2c_gsbi3_synaptics_info,
 		ARRAY_SIZE(msm_i2c_gsbi3_synaptics_info),
 	},
+#endif
 	{
 		I2C_SURF | I2C_FFA,
 		APQ_8064_GSBI1_QUP_I2C_BUS_ID,
@@ -5172,8 +5176,10 @@ extern void (*cam_vcm_off_cb)(void);
 
 static void __init m7wl_common_init(void)
 {
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_3K
 	int rc = 0;
 	struct kobject *properties_kobj;
+#endif
 
 	htc_add_ramconsole_devices();
 	platform_device_register(&msm_gpio_device);
@@ -5213,8 +5219,10 @@ static void __init m7wl_common_init(void)
 	m7wl_i2c_init();
 
 	if (board_build_flag() == 1) {
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_3K
 		for (rc = 0; rc < ARRAY_SIZE(syn_ts_3k_data); rc++)
 			syn_ts_3k_data[rc].mfg_flag = 1;
+#endif
 	}
 
 	register_i2c_devices();
@@ -5255,6 +5263,7 @@ static void __init m7wl_common_init(void)
 	apq8064_init_dsps();
 	platform_device_register(&msm_8960_riva);
 	BUG_ON(msm_pm_boot_init(&msm_pm_boot_pdata));
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_3K
 	properties_kobj = kobject_create_and_add("board_properties", NULL);
 	if (properties_kobj) {
 		rc = sysfs_create_group(properties_kobj,
