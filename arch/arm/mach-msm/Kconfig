@@ -1235,6 +1235,11 @@ config GSBI4_UARTDM
         help
           Say Y here if you want to support felica feature...
 
+config GSBI5_UARTDM
+	tristate "GSBI5 as UARTDM support"
+	help
+	  Say Y here if you want to support felica feature...
+
 config TROUT_BATTCHG
 	depends on MACH_TROUT && POWER_SUPPLY
 	default y
