@@ -30,6 +30,7 @@
 #include <linux/jiffies.h>
 #include <mach/msm_hsusb.h>
 #include <linux/stat.h>
+#include <linux/pl_sensor.h>
 #if defined(CONFIG_TOUCH_KEY_FILTER)
 #include <linux/input/cy8c_cs.h>
 #endif
@@ -62,7 +63,6 @@ static DEFINE_MUTEX(reload_lock);
 struct atmel_ts_data {
 	struct i2c_client *client;
 	struct input_dev *input_dev;
-	struct input_dev *sr_input_dev;
 	struct workqueue_struct *atmel_wq;
 	struct workqueue_struct *atmel_delayed_wq;
 	struct workqueue_struct *atmel_cable_vbus_wq;
@@ -119,6 +119,7 @@ struct atmel_ts_data {
 	uint8_t status;
 	uint8_t cable_vbus_status;
 	uint8_t diag_command;
+	uint8_t psensor_status;
 	uint8_t noiseLine_status;
 	uint8_t *ATCH_EXT;
 	int pre_data[11];
@@ -217,7 +218,8 @@ static int i2c_atmel_write(struct i2c_client *client, uint16_t address, uint8_t 
 
 static int i2c_atmel_write_byte_data(struct i2c_client *client, uint16_t address, uint8_t value)
 {
-	return i2c_atmel_write(client, address, &value, 1);
+	i2c_atmel_write(client, address, &value, 1);
+	return 0;
 }
 
 static uint16_t get_object_address(struct atmel_ts_data *ts, uint8_t object_type)
@@ -250,77 +252,6 @@ static uint8_t get_rid(struct atmel_ts_data *ts, uint8_t object_type)
 }
 
 #ifdef ATMEL_EN_SYSFS
-
-enum SR_REG_STATE{
-	ALLOCATE_DEV_FAIL = -2,
-	REGISTER_DEV_FAIL,
-	SUCCESS,
-};
-
-static int register_sr_touch_device(void)
-{
-	struct atmel_ts_data *ts = private_ts;
-
-	ts->sr_input_dev = input_allocate_device();
-
-	if (ts->sr_input_dev == NULL) {
-		printk(KERN_ERR "[TP][TOUCH_ERR]%s: Failed to allocate SR input device\n", __func__);
-		return ALLOCATE_DEV_FAIL;
-	}
-	ts->sr_input_dev->name = "sr_touchscreen";
-	set_bit(EV_SYN, ts->sr_input_dev->evbit);
-	set_bit(EV_ABS, ts->sr_input_dev->evbit);
-	set_bit(EV_KEY, ts->sr_input_dev->evbit);
-
-	set_bit(KEY_BACK, ts->sr_input_dev->keybit);
-	set_bit(KEY_HOME, ts->sr_input_dev->keybit);
-	set_bit(KEY_MENU, ts->sr_input_dev->keybit);
-	set_bit(KEY_SEARCH, ts->sr_input_dev->keybit);
-	set_bit(BTN_TOUCH, ts->sr_input_dev->keybit);
-	set_bit(KEY_APP_SWITCH, ts->sr_input_dev->keybit);
-	set_bit(INPUT_PROP_DIRECT, ts->sr_input_dev->propbit);
-	ts->sr_input_dev->mtsize = ts->finger_support;
-	input_set_abs_params(ts->sr_input_dev, ABS_MT_TRACKING_ID,
-		0, ts->finger_support - 1, 0, 0);
-	printk(KERN_INFO "[TP][SR]input_set_abs_params: mix_x %d, max_x %d,"
-		" min_y %d, max_y %d\n", ts->abs_x_min, ts->abs_x_max,
-		ts->abs_y_min, ts->abs_y_max);
-
-	input_set_abs_params(ts->sr_input_dev, ABS_MT_POSITION_X,
-				ts->abs_x_min, ts->abs_x_max, 0, 0);
-	input_set_abs_params(ts->sr_input_dev, ABS_MT_POSITION_Y,
-				ts->abs_y_min, ts->abs_y_max, 0, 0);
-	input_set_abs_params(ts->sr_input_dev, ABS_MT_TOUCH_MAJOR,
-				0, 255, 0, 0);
-	input_set_abs_params(ts->sr_input_dev, ABS_MT_WIDTH_MAJOR,
-				0, 30, 0, 0);
-	input_set_abs_params(ts->sr_input_dev, ABS_MT_PRESSURE,
-				0, 30, 0, 0);
-
-	if (input_register_device(ts->sr_input_dev)) {
-                input_free_device(ts->sr_input_dev);
-		printk(KERN_ERR "[TP][SR][TOUCH_ERR]%s: Unable to register %s input device\n",
-			__func__, ts->sr_input_dev->name);
-		return REGISTER_DEV_FAIL;
-	}
-	return SUCCESS;
-}
-
-static ssize_t set_en_sr(struct device *dev, struct device_attribute *attr,
-						const char *buf, size_t count)
-{
-	struct atmel_ts_data *ts = private_ts;
-	if (buf[0]) {
-		if (ts->sr_input_dev)
-			printk(KERN_INFO "[TP]%s: SR device already exist!\n", __func__);
-		else
-			printk(KERN_INFO "[TP]%s: SR touch device enable result:%X\n", __func__, register_sr_touch_device());
-	}
-	return count;
-}
-
-static DEVICE_ATTR(sr_en, S_IWUSR, 0, set_en_sr);
-
 static ssize_t atmel_reset(struct device *dev, struct device_attribute *attr,
 			     const char *buf, size_t count)
 {
@@ -393,7 +324,8 @@ static ssize_t stop_touch_show(struct device *dev, struct device_attribute *attr
 
 DEVICE_ATTR(disable_touch, (S_IWUSR|S_IRUGO), stop_touch_show, stop_touch);
 
-static ssize_t atmel_gpio_show(struct device *dev, struct device_attribute *attr, char *buf)
+static ssize_t atmel_gpio_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
 {
 	int ret = 0;
 	struct atmel_ts_data *ts_data;
@@ -410,7 +342,8 @@ static ssize_t atmel_gpio_show(struct device *dev, struct device_attribute *attr
 }
 static DEVICE_ATTR(gpio, S_IRUGO, atmel_gpio_show, NULL);
 
-static ssize_t atmel_vendor_show(struct device *dev, struct device_attribute *attr, char *buf)
+static ssize_t atmel_vendor_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
 {
 	int ret = 0;
 	struct atmel_ts_data *ts_data;
@@ -425,7 +358,8 @@ static DEVICE_ATTR(vendor, S_IRUGO, atmel_vendor_show, NULL);
 
 static unsigned long atmel_reg_addr;
 
-static ssize_t atmel_register_show(struct device *dev, struct device_attribute *attr, char *buf)
+static ssize_t atmel_register_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
 {
 	int ret = 0;
 	uint8_t ptr[1] = { 0 };
@@ -673,6 +607,7 @@ static ssize_t atmel_diag_show(struct device *dev,
 		i2c_atmel_write_byte_data(ts_data->client,
 			get_object_address(ts_data, GEN_COMMANDPROCESSOR_T6) +
 			T6_CFG_DIAG, T6_CFG_DIAG_CMD_PAGEUP);
+
 	}
 
 	return count;
@@ -706,12 +641,10 @@ static ssize_t atmel_unlock_store(struct device *dev,
 
 	printk(KERN_INFO "[TP]unlock change to %d\n", unlock);
 
-	if (!ts_data->unlock_attr)
-		return count;
-
 	if ((unlock == 2 || unlock == 3) &&
 		(ts_data->first_pressed || ts_data->finger_count) &&
-		ts_data->pre_data[0] < RECALIB_UNLOCK) {
+		ts_data->pre_data[0] < RECALIB_UNLOCK &&
+		ts_data->unlock_attr) {
 
 		ts_data->valid_press_timeout = jiffies + msecs_to_jiffies(15);
 		if (ts_data->finger_count == 0)
@@ -735,10 +668,11 @@ static ssize_t atmel_unlock_store(struct device *dev,
 	return count;
 }
 
-static DEVICE_ATTR(unlock, (S_IWUSR|S_IRUGO), NULL, atmel_unlock_store);
+static DEVICE_ATTR(unlock, (S_IWUSR|S_IRUGO),
+	NULL, atmel_unlock_store);
 
 static ssize_t atmel_info_show(struct device *dev,
-			       struct device_attribute *attr, char *buf)
+        struct device_attribute *attr, char *buf)
 {
 	size_t count = 0;
 	count += sprintf(buf, "Type B/mtsize/new filter/INT\n");
@@ -747,6 +681,7 @@ static ssize_t atmel_info_show(struct device *dev,
 }
 
 static DEVICE_ATTR(info, S_IRUGO, atmel_info_show, NULL);
+
 
 static struct kobject *android_touch_kobj;
 
@@ -800,11 +735,11 @@ static int atmel_touch_sysfs_init(void)
 		printk(KERN_ERR "[TP]TOUCH_ERR: create_file htc_event failed\n");
 		return ret;
 	}
-	ret = sysfs_create_file(android_touch_kobj, &dev_attr_report_type.attr);
-	if (ret) {
-		printk(KERN_ERR "[TP]TOUCH_ERR: create_file report_type failed\n");
-		return ret;
-	}
+        ret = sysfs_create_file(android_touch_kobj, &dev_attr_report_type.attr);
+        if (ret) {
+                printk(KERN_ERR "[TP]TOUCH_ERR: create_file report_type failed\n");
+                return ret;
+        }
 	ret = sysfs_create_file(android_touch_kobj, &dev_attr_disable_touch.attr);
 	if (ret) {
 		printk(KERN_ERR "[TP]TOUCH_ERR: create_file disable_touch failed\n");
@@ -818,11 +753,6 @@ static int atmel_touch_sysfs_init(void)
 	ret = sysfs_create_file(android_touch_kobj, &dev_attr_info.attr);
 	if (ret) {
 		printk(KERN_ERR "[TP]TOUCH_ERR: create_file info failed\n");
-		return ret;
-	}
-	ret = sysfs_create_file(android_touch_kobj, &dev_attr_sr_en.attr);
-	if (ret) {
-		printk(KERN_ERR "[TP]TOUCH_ERR: create_file SR_EN failed\n");
 		return ret;
 	}
 
@@ -843,7 +773,6 @@ static void atmel_touch_sysfs_deinit(void)
 	sysfs_remove_file(android_touch_kobj, &dev_attr_htc_event.attr);
 	sysfs_remove_file(android_touch_kobj, &dev_attr_disable_touch.attr);
 	sysfs_remove_file(android_touch_kobj, &dev_attr_reset.attr);
-	sysfs_remove_file(android_touch_kobj, &dev_attr_sr_en.attr);
 	kobject_del(android_touch_kobj);
 }
 
@@ -876,7 +805,7 @@ static int check_delta_full(struct atmel_ts_data *ts,
 				get_object_address(ts, DIAGNOSTIC_T37), data, 2);
 		}
 		if (loop_j == 10)
-			printk(KERN_WARNING "[TP]%s: Diag data not ready\n", __func__);
+			printk(KERN_ERR "[TP]TOUCH_ERR:%s: Diag data not ready\n", __func__);
 
 		i2c_atmel_read(ts->client,
 			get_object_address(ts, DIAGNOSTIC_T37),
@@ -1010,65 +939,54 @@ static void msg_process_multitouch(struct atmel_ts_data *ts, uint8_t *data, uint
 
 		if (ts->grip_suppression & BIT(idx))
 			ts->grip_suppression &= ~BIT(idx);
+		if (ts->finger_pressed & BIT(idx)) {
+			if (ts->report_type == SYN_AND_REPORT_TYPE_B) {
+	                        input_mt_slot(ts->input_dev, idx);
+				input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, 0);
+				input_sync(ts->input_dev);
+			}
 
-		if (!(ts->finger_pressed & BIT(idx)))
-			/* end since finger was not pressed */
-			return;
-
-		if (ts->report_type == SYN_AND_REPORT_TYPE_B) {
-			input_mt_slot(ts->input_dev, idx);
-			input_mt_report_slot_state(ts->input_dev, MT_TOOL_FINGER, 0);
-			input_sync(ts->input_dev);
-		}
-
-		if (ts->finger_count == 0)
-			printk(KERN_ERR "[TP]TOUCH_ERR: finger count has reached zero\n");
-		else
-			ts->finger_count--;
-		ts->finger_pressed &= ~BIT(idx);
-
-		if (!ts->first_pressed) {
-			if (ts->finger_count == 0)
-				ts->first_pressed = 1;
-			printk(KERN_INFO "[TP]E%d@%d,%d\n",
-				idx + 1, ts->finger_data[idx].x, ts->finger_data[idx].y);
-		}
-
-		switch (ts->pre_data[0]) {
-			case RECALIB_NEED:
-				if (ts->finger_count == 0 && !ts->unlock_attr && idx == 0 &&
-					ts->finger_data[idx].y > 750 && ts->finger_data[idx].y - ts->pre_data[idx+1] > 135) {
-					/* recalibrate on last release */
-					restore_normal_threshold(ts);
-					confirm_calibration(ts, 1, 0);
-				}
-				break;
-			case RECALIB_UNLOCK:
-				if (ts->finger_count) {
-					i2c_atmel_write_byte_data(ts->client,
-						get_object_address(ts, GEN_COMMANDPROCESSOR_T6) +
-						T6_CFG_CALIBRATE, 0x55);
-				} else if (ts->unlock_attr && idx == 0 &&
+			if (!ts->finger_count)
+				printk(KERN_ERR "[TP]TOUCH_ERR: finger count has reached zero\n");
+			else
+				ts->finger_count--;
+			ts->finger_pressed &= ~BIT(idx);
+			if (!ts->first_pressed) {
+				if (!ts->finger_count)
+					ts->first_pressed = 1;
+				printk(KERN_INFO "[TP]E%d@%d,%d\n",
+					idx + 1, ts->finger_data[idx].x, ts->finger_data[idx].y);
+			}
+			if (ts->pre_data[0] < RECALIB_DONE) {
+				if (ts->finger_count == 0) {
+					if (ts->pre_data[0] == RECALIB_NEED &&
+						!ts->unlock_attr && idx == 0 &&
+						ts->finger_data[idx].y > 750 &&
+						ts->finger_data[idx].y - ts->pre_data[idx+1] > 135) {
+							restore_normal_threshold(ts);
+							confirm_calibration(ts, 1, 0);
+					} else if (ts->pre_data[0] == RECALIB_UNLOCK &&
+						ts->unlock_attr && idx == 0 &&
 						time_after(jiffies, ts->valid_press_timeout)) {
-					ts->valid_pressed_cnt++;
-					if (ts->valid_pressed_cnt > 2) {
-						cancel_delayed_work_sync(&ts->unlock_work);
-						confirm_calibration(ts, 0, 1);
-					}
+						ts->valid_pressed_cnt++;
+						if (ts->pre_data[0] == RECALIB_UNLOCK &&
+							ts->valid_pressed_cnt > 2) {
+							cancel_delayed_work_sync(&ts->unlock_work);
+							if (ts->pre_data[0] == RECALIB_UNLOCK)
+								confirm_calibration(ts, 0, 1);
+						}
+					} else if (ts->pre_data[0] == RECALIB_NG)
+						ts->pre_data[0] = RECALIB_NEED;
+				} else {
+					if (ts->pre_data[0] < RECALIB_UNLOCK)
+						i2c_atmel_write_byte_data(ts->client,
+							get_object_address(ts, GEN_COMMANDPROCESSOR_T6) +
+							T6_CFG_CALIBRATE, 0x55);
 				}
-				break;
-			case RECALIB_NG:
-				if (ts->finger_count == 0)
-					ts->pre_data[0] = RECALIB_NEED;
-				break;
-			default:
-				break;
+			}
 		}
-	} else if (data[T9_MSG_STATUS] & (T9_MSG_STATUS_DETECT|T9_MSG_STATUS_PRESS)) {
-		if (ts->finger_pressed & BIT(idx))
-			/* end since finger is already pressed */
-			return;
-
+	} else if ((data[T9_MSG_STATUS] & (T9_MSG_STATUS_DETECT|T9_MSG_STATUS_PRESS)) &&
+		!(ts->finger_pressed & BIT(idx))) {
 		if (ts->filter_level[0]) {
 			if (ts->finger_data[idx].x < ts->filter_level[FL_XLOGRIPMIN] ||
 				ts->finger_data[idx].x > ts->filter_level[FL_XHIGRIPMAX])
@@ -1081,32 +999,28 @@ static void msg_process_multitouch(struct atmel_ts_data *ts, uint8_t *data, uint
 				ts->finger_data[idx].x < ts->filter_level[FL_XHIGRIPMIN])
 				ts->grip_suppression &= ~BIT(idx);
 		}
-
 		if (!(ts->grip_suppression & BIT(idx))) {
-			ts->finger_pressed |= BIT(idx);
-
-			if (ts->finger_count < ts->finger_support)
+			if (!ts->first_pressed)
+				printk(KERN_INFO "[TP]S%d@%d,%d\n",
+					idx + 1, ts->finger_data[idx].x, ts->finger_data[idx].y);
+			if (ts->finger_count >= ts->finger_support)
+				printk(KERN_ERR "[TP]TOUCH_ERR: finger count has reached max\n");
+			else
 				ts->finger_count++;
-
-			switch (ts->pre_data[0]) {
-				case RECALIB_UNLOCK:
-					if (ts->unlock_attr && ts->finger_count > 1)
-						ts->valid_pressed_cnt = 0;
-					break;
-				case RECALIB_NG:
-				case RECALIB_NEED:
+			ts->finger_pressed |= BIT(idx);
+			if (ts->pre_data[0] < RECALIB_DONE) {
+				if (ts->pre_data[0] < RECALIB_UNLOCK) {
 					ts->pre_data[idx + 1] = ts->finger_data[idx].y;
-					if (ts->finger_count == ts->finger_support) {
+					if (ts->finger_count == ts->finger_support)
 						i2c_atmel_write_byte_data(ts->client,
 							get_object_address(ts, GEN_COMMANDPROCESSOR_T6) +
 							T6_CFG_CALIBRATE, 0x55);
-					} else if (ts->finger_count > 1) {
-						if (ts->pre_data[0] == RECALIB_NEED)
-							ts->pre_data[0] = RECALIB_NG;
-					}
-					break;
-				default:
-					break;
+					else if (ts->finger_count > 1 &&
+						ts->pre_data[0] == RECALIB_NEED)
+						ts->pre_data[0] = RECALIB_NG;
+				} else if (ts->pre_data[0] == RECALIB_UNLOCK && ts->unlock_attr)
+					if (ts->finger_count > 1)
+						ts->valid_pressed_cnt = 0;
 			}
 		}
 	}
@@ -1181,7 +1095,7 @@ static void compatible_input_report(struct input_dev *idev,
 				struct atmel_finger_data *fdata, uint8_t press, uint8_t last, uint8_t report_type, uint8_t slot_num)
 {
 	if (report_type == SYN_AND_REPORT_TYPE_B) {
-		if (!press) {
+	        if (!press) {
 			input_mt_slot(idev, slot_num);
 			input_mt_report_slot_state(idev, MT_TOOL_FINGER, 0);
 		} else {
@@ -1192,9 +1106,9 @@ static void compatible_input_report(struct input_dev *idev,
 			input_report_abs(idev, ABS_MT_WIDTH_MAJOR, fdata->w);
 			input_report_abs(idev, ABS_MT_POSITION_X, fdata->x);
 			input_report_abs(idev, ABS_MT_POSITION_Y, fdata->y);
-		}
+	        }
 	} else {
-		if (!press)
+	        if (!press)
 			input_mt_sync(idev);
 		else {
 			input_report_abs(idev, ABS_MT_PRESSURE, fdata->z);
@@ -1203,7 +1117,7 @@ static void compatible_input_report(struct input_dev *idev,
 			input_report_abs(idev, ABS_MT_POSITION_X, fdata->x);
 			input_report_abs(idev, ABS_MT_POSITION_Y, fdata->y);
 			input_mt_sync(idev);
-		}
+	        }
 	}
 }
 
@@ -1321,22 +1235,21 @@ static irqreturn_t atmel_irq_thread(int irq, void *ptr)
 	}
 
 	if (ts->report_type == SYN_AND_REPORT_TYPE_B) {
-		if (!ts->finger_count || ts->face_suppression) {
-			ts->finger_pressed = 0;
-			ts->finger_count = 0;
+                if (!ts->finger_count || ts->face_suppression) {
+                        ts->finger_pressed = 0;
+                        ts->finger_count = 0;
 
-			if (ts->debug_log_level & 0x2)
-				printk(KERN_INFO "[TP]Finger leave\n");
-		} else {
-			if (ts->repeat_flag == 0) {
-				multi_input_report(ts);
-				if (htc_event_enable == 0 || disable_touch == 0)
-					input_sync(ts->input_dev);
-			}
-		}
+                        if (ts->debug_log_level & 0x2)
+                                printk(KERN_INFO "[TP]Finger leave\n");
+                } else {
+                        if (ts->repeat_flag == 0) {
+                                multi_input_report(ts);
+                                if (htc_event_enable == 0 || disable_touch == 0)
+                                        input_sync(ts->input_dev);
+                        }
+                }
 	} else {
 		if (!ts->finger_count || ts->face_suppression) {
-			printk(KERN_INFO "[TP] Total finger count: %d\n", ts->finger_count);
 			ts->finger_pressed = 0;
 			ts->finger_count = 0;
 			if (htc_event_enable == 0)
@@ -1448,6 +1361,25 @@ static void atmel_ts_cable_vbus_work_func(struct work_struct *work)
 }
 #endif
 
+static int psensor_tp_status_handler_func(struct notifier_block *this,
+	unsigned long status, void *unused)
+{
+	struct atmel_ts_data *ts;
+
+	ts = private_ts;
+	printk(KERN_INFO "[TP]psensor status %d -> %lu\n",
+		ts->psensor_status, status);
+	if (ts->psensor_status == 0) {
+		if (status == 1)
+			ts->psensor_status = status;
+		else
+			ts->psensor_status = 0;
+	} else
+		ts->psensor_status = status;
+
+	return NOTIFY_OK;
+}
+
 #if defined(CONFIG_TOUCH_KEY_FILTER)
 static int touchkey_tp_status_handler_func(struct notifier_block *this,
 						unsigned long status, void *unused)
@@ -1526,7 +1458,7 @@ static void cable_tp_status_handler_func(int connect_status)
 	printk(KERN_INFO "[TP]cable change to %d\n", connect_status);
 
 	if (connect_status != ts->status) {
-		ts->status = connect_status ? CONNECTED : NONE;
+		ts->status = connect_status > 0 ? CONNECTED : NONE;
 		printk(KERN_INFO "[TP]ts->status change to %d\n", ts->status);
 		if (!ts->status && ts->wlc_status)
 			printk(KERN_ERR "[TP]TOUCH_ERR:ambigurous wireless charger state\n");
@@ -1548,7 +1480,7 @@ static void cable_tp_status_handler_func(int connect_status)
 				i2c_atmel_write_byte_data(ts->client,
 					get_object_address(ts, ts->cable_config.cfg[i].objid) +
 					ts->cable_config.cfg[i].byte,
-					ts->status ? (ts->cable_config.cfg[i].value) : (ts->cable_config.cfg[i].orival));
+					ts->status ?  (ts->cable_config.cfg[i].value) : (ts->cable_config.cfg[i].orival));
 
 			if (ts->status == NONE && ts->noiseLine_status) {
 				i2c_atmel_write_byte_data(ts->client,
@@ -1629,8 +1561,8 @@ static int read_object_table(struct atmel_ts_data *ts)
 
 #if defined(CONFIG_TOUCHSCREEN_ATMEL_DETECT_CABLE)
 static struct t_cable_status_notifier cable_status_handler = {
-	.name = "usb_tp_connected",
-	.func = cable_tp_status_handler_func,
+    .name = "usb_tp_connected",
+    .func = cable_tp_status_handler_func,
 };
 #endif
 
@@ -1645,6 +1577,10 @@ static struct notifier_block wlc_status_handler = {
 };
 #endif
 #endif
+
+static struct notifier_block psensor_status_handler = {
+	.notifier_call = psensor_tp_status_handler_func,
+};
 
 #if defined(CONFIG_TOUCH_KEY_FILTER)
 static struct notifier_block touchkey_status_handler = {
@@ -1692,7 +1628,8 @@ static void erase_config(struct atmel_ts_data *ts_data, int intr)
 	msleep(100);
 }
 
-static int atmel_224e_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
+static int atmel_224e_ts_probe(struct i2c_client *client,
+			 const struct i2c_device_id *id)
 {
 	struct atmel_ts_data *ts;
 	struct atmel_i2c_platform_data *pdata;
@@ -1944,7 +1881,7 @@ static int atmel_224e_ts_probe(struct i2c_client *client, const struct i2c_devic
 				for (loop_i = 0; loop_i < 3; loop_i++) {
 					if (pdata->object_crc[loop_i] !=
 						data[T6_MSG_CHECKSUM + loop_i]) {
-						printk(KERN_INFO
+                                                printk(KERN_INFO
 							"[TP]CRC Error: DRV=0x%2.2X,0x%2.2X,0x%2.2X  NV=0x%2.2X,0x%2.2X,0x%2.2X\n",
 							pdata->object_crc[0],
 							pdata->object_crc[1],
@@ -1986,7 +1923,7 @@ static int atmel_224e_ts_probe(struct i2c_client *client, const struct i2c_devic
 		cable_connect_type = cable_get_connect_type();
 		if (cable_connect_type == 4)
 			ts->wlc_status = CONNECTED;
-		if (cable_connect_type != 0)
+		if (cable_connect_type > 0)
 			ts->status = CONNECTED;
 #endif
 
@@ -2321,6 +2258,8 @@ static int atmel_224e_ts_probe(struct i2c_client *client, const struct i2c_devic
 	dev_info(&client->dev, "[TP]Start touchscreen %s in interrupt mode\n",
 			ts->input_dev->name);
 
+	register_notifier_by_psensor(&psensor_status_handler);
+
 #if defined(CONFIG_TOUCH_KEY_FILTER)
 	register_notifier_by_touchkey(&touchkey_status_handler);
 #endif
@@ -2364,8 +2303,6 @@ static int atmel_224e_ts_remove(struct i2c_client *client)
 
 	destroy_workqueue(ts->atmel_delayed_wq);
 	destroy_workqueue(ts->atmel_wq);
-	if (ts->sr_input_dev != NULL)
-		input_unregister_device(ts->sr_input_dev);
 	input_unregister_device(ts->input_dev);
 	kfree(ts);
 
@@ -2380,7 +2317,7 @@ static int atmel_224e_ts_suspend(struct i2c_client *client, pm_message_t mesg)
 	disable_irq(client->irq);
 
 	cancel_delayed_work_sync(&ts->unlock_work);
-	if (ts->pre_data[0] == RECALIB_UNLOCK)
+	if (ts->pre_data[0] == RECALIB_UNLOCK && ts->psensor_status)
 		confirm_calibration(ts, 0, 3);
 
 #if defined(CONFIG_TOUCHSCREEN_ATMEL_DETECT_USB_VBUS)
@@ -2393,10 +2330,12 @@ static int atmel_224e_ts_suspend(struct i2c_client *client, pm_message_t mesg)
 	ts->finger_count = 0;
 	ts->first_pressed = 0;
 
-	ts->pre_data[0] = RECALIB_NEED;
-	i2c_atmel_write(client,
-		get_object_address(ts, GEN_ACQUISITIONCONFIG_T8) + T8_CFG_ATCHCALST,
-		ts->ATCH_EXT, 4);
+	if (ts->psensor_status == 0) {
+		ts->pre_data[0] = RECALIB_NEED;
+		i2c_atmel_write(client,
+			get_object_address(ts, GEN_ACQUISITIONCONFIG_T8) + T8_CFG_ATCHCALST,
+			ts->ATCH_EXT, 4);
+	}
 
 	if (ts->workaround & TW_SHIFT)
 		i2c_atmel_write_byte_data(ts->client,
@@ -2423,7 +2362,7 @@ static int atmel_224e_ts_resume(struct i2c_client *client)
 			T9_CFG_YHICLIP, ts->config_setting[NONE].config_T9[T9_CFG_YHICLIP]);
 
 	if (ts->pre_data[0] == RECALIB_NEED) {
-		if (ts->call_tchthr[0] && !ts->wlc_status) {
+		if (ts->call_tchthr[0] && ts->psensor_status == 2 && !ts->wlc_status) {
 			printk(KERN_INFO "[TP]raise touch threshold\n");
 			i2c_atmel_write_byte_data(ts->client,
 				get_object_address(ts, TOUCH_MULTITOUCHSCREEN_T9) + T9_CFG_TCHTHR,
@@ -2452,6 +2391,8 @@ static int atmel_224e_ts_resume(struct i2c_client *client)
 	}
 
 	if (ts->pre_data[0] != RECALIB_NEED) {
+		printk(KERN_INFO "[TP]resume in call, psensor status %d\n",
+			ts->psensor_status);
 		queue_work(ts->atmel_wq, &ts->check_delta_work);
 	} else {
 		msleep(1);
@@ -2523,3 +2464,4 @@ module_exit(atmel_224e_ts_exit);
 
 MODULE_DESCRIPTION("ATMEL Touch driver");
 MODULE_LICENSE("GPL");
+
