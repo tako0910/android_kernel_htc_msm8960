@@ -5316,21 +5316,9 @@ static struct clk_lookup msm_clocks_8064[] = {
 #ifdef CONFIG_MACH_LGE
 	CLK_LOOKUP("core_clk",		gsbi4_uart_clk.c,	"msm_serial_hsl.0"),
 #else
-#ifdef CONFIG_GSBI4_UARTDM
-        CLK_LOOKUP("core_clk",          gsbi4_uart_clk.c, "msm_serial_hs.1"),
-#else
-	CLK_LOOKUP("core_clk",          gsbi4_uart_clk.c, ""),
+	CLK_LOOKUP("core_clk",		gsbi4_uart_clk.c, "msm_serial_hs.1"),
 #endif
-#endif
-#ifdef CONFIG_GSBI5_UARTDM
-#ifdef CONFIG_SERIAL_MSM_HS_IMC
-	CLK_LOOKUP("core_clk",		gsbi5_uart_clk.c, "msm_serial_hs_imc.1"),
-#else
-	CLK_LOOKUP("core_clk",		gsbi5_uart_clk.c, "msm_serial_hs.1"),
-#endif
-#else
-	CLK_LOOKUP("core_clk",		gsbi5_uart_clk.c,	NULL),
-#endif
+	CLK_LOOKUP("core_clk",		gsbi5_uart_clk.c,	""),
 	CLK_LOOKUP("core_clk",		gsbi6_uart_clk.c, "msm_serial_hs.0"),
 #ifdef CONFIG_SERIAL_MSM_HS_BRCM
 	CLK_LOOKUP("core_clk",		gsbi6_uart_clk.c, "msm_serial_hs_brcm.0"),
@@ -5396,19 +5384,9 @@ static struct clk_lookup msm_clocks_8064[] = {
 	CLK_LOOKUP("iface_clk",		gsbi4_p_clk.c,		"msm_serial_hsl.0"),
 #endif
 	CLK_LOOKUP("iface_clk",		gsbi4_p_clk.c,		"qup_i2c.4"),
-#ifdef CONFIG_GSBI4_UARTDM
 	CLK_LOOKUP("iface_clk",		gsbi4_p_clk.c,	"msm_serial_hs.1"),
-#endif
 	CLK_LOOKUP("iface_clk",		gsbi5_p_clk.c,		"spi_qsd.0"),
-#ifdef CONFIG_GSBI5_UARTDM
-#ifdef CONFIG_SERIAL_MSM_HS_IMC
-	CLK_LOOKUP("iface_clk",		gsbi5_p_clk.c, "msm_serial_hs_imc.1"),
-#else
-    CLK_LOOKUP("iface_clk",     gsbi5_p_clk.c,  "msm_serial_hs.1"),
-#endif
-#else
 	CLK_LOOKUP("iface_clk",		gsbi5_p_clk.c,		"qup_i2c.5"),
-#endif
 	CLK_LOOKUP("iface_clk",		gsbi6_p_clk.c,	"msm_serial_hs.0"),
 #ifdef CONFIG_SERIAL_MSM_HS_BRCM
 	CLK_LOOKUP("iface_clk",		gsbi6_p_clk.c,	"msm_serial_hs_brcm.0"),
