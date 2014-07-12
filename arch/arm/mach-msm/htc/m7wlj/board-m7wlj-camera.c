@@ -4036,7 +4036,7 @@ void __init m7wlj_init_cam(void)
 	main_camera_id = m7wlj_main_camera_id();
 	front_camera_id = m7wlj_front_camera_id();
 #endif
-	pr_info("main_camera id = %d , front_camera_id=%d\n", main_camera_id, front_camera_id);
+	pr_info("main_camera id = %d\n", main_camera_id);
 
 	pr_info("engineerid=%d\n",engineerid);
 #ifdef CONFIG_I2C
@@ -4089,7 +4089,7 @@ void __init m7wlj_init_cam(void)
 
 			i2c_register_board_info(APQ_8064_GSBI4_QUP_I2C_BUS_ID,
 				m7wlj_camera_i2c_boardinfo_imx135_ov2722,
-				ARRAY_SIZE(m7wlj_camera_i2c_boardinfo_imx135_ov2722))
+				ARRAY_SIZE(m7wlj_camera_i2c_boardinfo_imx135_ov2722));
 
 			update_yushanII_flag(HTC_CAMERA_IMAGE_NONE_BOARD);
 		}
